@@ -76,6 +76,8 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
+notebooks/
 
 # IPython
 profile_default/
@@ -127,3 +129,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Local caches
+*.pkl
+LoadStage/
+
+# Custom scripts
+entrypoint.py
+delete.py
+
+# Miscellaneous
+.DS_Store
