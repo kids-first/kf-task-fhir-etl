@@ -138,5 +138,14 @@ LoadStage/
 entrypoint.py
 delete.py
 
+# AWS Step Functions
+*.secrets
+*.sensitive
+portal.properties
+users.dev.json
+cavatica.json
+token
+d3b-deployment-config.iml
+
 # Miscellaneous
 .DS_Store
