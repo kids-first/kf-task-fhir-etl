@@ -1,0 +1,62 @@
+name: CICD 
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'main'
+
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+permissions:
+    contents: read
+    id-token: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: 1
+      ENVIRONMENT: "dev"
+      AWS_REGION: "us-east-1"
+      AWS_ROLE_TO_ASSUME: "arn:aws:iam::232196027141:role/GitHubActionsKf-Task-Fhi-prd-Role-20221031131345305400000008"
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Execute cibuild
+        run: ./scripts/cibuild
+
+      - name: Execute cipublish
+        run: ./scripts/cipublish
+
+  deploy-prd:  
+    needs: [build]
+    name: Deploy Production 
+    #if: startsWith(github.ref, 'refs/tags/') && startsWith(github.ref_name, 'main')
+    if: startsWith(github.ref_name, 'feature/al/')
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: "prd"
+      AWS_ROLE_TO_ASSUME: "arn:aws:iam::232196027141:role/GitHubActionsKf-Task-Fhi-prd-Role-20221031131345305400000008"
+      AWS_REGION: "us-east-1"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy
+        run: |
+          docker-compose -f docker-compose.ci.yml run --rm terraform -c "
+            # Unset this to avoid a ProfileNotFound exception from the AWS CLI.
+            unset AWS_PROFILE
+            echo $ENVIRONMENT
+            export ENVIRONMENT=$ENVIRONMENT
+            ./scripts/infra plan && ./scripts/infra apply
+          "
