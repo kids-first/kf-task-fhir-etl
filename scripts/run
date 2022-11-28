@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+echo "Starting execution of the step function"
+PROJECT_NAME="kf-task-fhir-etl"
+aws stepfunctions start-execution --state-machine-arn arn:aws:states:us-east-1:232196027141:stateMachine:stateMachineKf-Task-Fhi-prd- > /dev/null

@@ -1,0 +1,85 @@
+{
+	"StartAt": "Step1",
+	"TimeoutSeconds": 10800,
+	"States": {
+		"Step1": {
+			"Type": "Task",
+			"Resource": "arn:aws:states:::batch:submitJob.sync",
+			"Parameters": {
+				"JobName": "DropSourceSchemas",
+				"JobQueue": "${batch_job_queue_arn}",
+				"JobDefinition": "${batch_job_definition_arn}",
+				"ContainerOverrides": {
+				"Command": [
+				"echo","'Step1'"
+				]
+				}
+			}
+		,
+		"Next":"Step2",
+		"Catch": [
+			{
+				"ErrorEquals": [
+					"States.ALL"
+				],
+				"ResultPath": "$.error",
+				"Next": "Fail"
+			}
+		]
+	},
+	"Step2": {
+		"Type": "Task",
+		"Resource": "arn:aws:states:::batch:submitJob.sync",
+		"Parameters": {
+			"JobName": "RefreshRedCapCBTNEnrollment",
+			"JobQueue": "${batch_job_queue_arn}",
+			"JobDefinition": "${batch_job_definition_arn}",
+			"ContainerOverrides": {
+			"Command": [
+				"curl","http://app.kf-api-fhir-service-prd.kf-strides.org:9000"
+				     ]
+			}
+		},
+		"Next": "Step3",
+		"Catch": [
+			{
+				"ErrorEquals": [
+					"States.ALL"
+				],
+				"ResultPath": "$.error",
+				"Next": "Fail"
+			}
+		]
+	},
+	"Step3": {
+		"Type": "Task",
+		"Resource": "arn:aws:states:::batch:submitJob.sync",
+		"Parameters": {
+			"JobName": "RefreshRedCapCBTNClinical",
+			"JobQueue": "${batch_job_queue_arn}",
+			"JobDefinition": "${batch_job_definition_arn}",
+			"ContainerOverrides": {
+			"Command": [
+				"echo","'Step3'"
+				     ]
+			}
+		},
+		"Next": "Success",
+		"Catch": [
+			{
+				"ErrorEquals": [
+					"States.ALL"
+				],
+				"ResultPath": "$.error",
+				"Next": "Fail"
+			}
+		]
+	},
+	"Success": {
+		"Type": "Succeed"
+	},
+	"Fail": {
+		"Type": "Fail"
+	}
+}
+}

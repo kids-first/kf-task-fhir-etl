@@ -1,0 +1,37 @@
+{
+    "image": "${image_url}",
+    "vcpus": ${etl_vcpus},
+    "memory": ${etl_memory},
+    "executionRoleArn": "${ecs_execution_role_arn}", "secrets": [
+        {
+          "name": "fhir_password",
+          "valueFrom": "${fhir_password}"
+        }
+    ],
+    "environment": [
+        {
+          "name": "FHIR_USERNAME",
+          "value": "${fhir_username}"
+        },
+        {
+          "name": "FHIR_URL",
+          "value": "${fhir_service_url}"
+        }
+    ],
+    "volumes": [
+        {
+            "host": {
+                "sourcePath": "/media/ephemeral0"
+            },
+            "name": "ephemeral0"
+        }
+    ],
+    "mountPoints": [
+        {
+            "containerPath": "/tmp",
+            "readOnly": false,
+            "sourceVolume": "ephemeral0"
+        }
+    ],
+    "privileged": false
+}

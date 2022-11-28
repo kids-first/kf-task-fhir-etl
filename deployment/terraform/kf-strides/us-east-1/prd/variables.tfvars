@@ -1,0 +1,9 @@
+project="kf-task-fhir-etl"
+repo_name="kids-first/kf-task-fhir-etl"
+environment="prd"
+vpc_availability_zones=["us-east-1a","us-east-1b"]
+vpc_id="vpc-048d88ccc672ecc0f"
+vpc_private_subnet_ids=["subnet-00aab84919d5a44e2","subnet-012f2dd8f97fa5dac"]
+fhir_service_url="kf-api-fhir-service.kidsfirstdrc.org"
+fhir_username="pipeline"
+fhir_password="arn:aws:secretsmanager:us-east-1:232196027141:secret:kf-task-fhir-etl/prd/fhir_password:password::"

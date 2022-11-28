@@ -1,0 +1,86 @@
+#!/bin/bash
+
+ETL_SETTINGS_BUCKET=kf-strides-232196027141-us-east-1-${ENVIRONMENT}-secrets
+PROJECT_NAME=kf-task-fhir-etl
+ACCOUNT_NAME=kf-strides
+
+set -e
+
+if [[ -n "${ETL_DEBUG}" ]]; then
+    set -x
+fi
+
+function usage() {
+    echo -n \
+        "Usage: $(basename "$0") COMMAND OPTION[S]
+Execute Terraform subcommands with remote state management.
+"
+}
+
+if [[ -n "${GIT_COMMIT}" ]]; then
+    GIT_COMMIT="${GIT_COMMIT:0:7}"
+else
+    GIT_COMMIT="$(git rev-parse --short HEAD)"
+fi
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    if [[ "${1:-}" == "--help" ]]; then
+        usage
+    else
+        TERRAFORM_DIR="$(dirname "$0")/../deployment/terraform"
+        echo
+        echo "Attempting to deploy application version [${GIT_COMMIT}]..."
+        echo "-----------------------------------------------------"
+        echo
+    fi
+echo "DEPLOYING TO $ENVIRONMENT"
+if [[ -z "${ENVIRONMENT}" ]]; then
+    echo "Please set ENVIRONMENT environmental variable(e.g dev,qa,prd)"
+    exit 1
+fi
+
+        pushd "${TERRAFORM_DIR}"
+
+        case "$1" in
+        plan)
+            # Clear stale modules & remote state, then re-initialize
+            rm -rf .terraform terraform.tfstate*
+
+            terraform init \
+                -backend-config="bucket=${ETL_SETTINGS_BUCKET}" \
+                -backend-config="key=${PROJECT_NAME}/terraform/state" \
+
+
+            terraform plan \
+                -compact-warnings \
+                -var="image_tag=${GIT_COMMIT}" \
+                -var-file="${ACCOUNT_NAME}/us-east-1/${ENVIRONMENT}/variables.tfvars" \
+                -out="${ACCOUNT_NAME}/us-east-1/${ENVIRONMENT}/plan.tfplan"
+            ;;
+        plan-destroy)
+            # Clear stale modules & remote state, then re-initialize
+            rm -rf .terraform terraform.tfstate*
+
+            terraform init \
+                -backend-config="bucket=${ETL_SETTINGS_BUCKET}" \
+                -backend-config="key=${PROJECT_NAME}/terraform/state" \
+
+
+            terraform plan -destroy \
+                -compact-warnings \
+                -var="image_tag=${GIT_COMMIT}" \
+                -var-file="${ACCOUNT_NAME}/us-east-1/${ENVIRONMENT}/variables.tfvars" \
+                -out="${ACCOUNT_NAME}/us-east-1/${ENVIRONMENT}/plan.tfplan"
+            ;;
+        apply)
+                terraform apply "${ACCOUNT_NAME}/us-east-1/${ENVIRONMENT}/plan.tfplan"
+		echo "Apply terraform"
+            ;;
+        *)
+            echo "ERROR: I don't have support for that Terraform subcommand!"
+            exit 1
+            ;;
+        esac
+
+        popd
+fi
