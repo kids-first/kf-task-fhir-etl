@@ -140,3 +140,6 @@ delete.py
 
 # Miscellaneous
 .DS_Store
+
+# Service data
+.data/
