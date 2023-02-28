@@ -21,8 +21,8 @@ The Kids First FHIR ETL Task Service, built off of the [Kids First Data Ingest L
 3. Clone this repository:
 
 ```
-$ git clone https://github.com/kids-first/kf-task-fhir-etl.git
-$ cd kf-task-fhir-etl
+$ git clone https://github.com/kids-first/kf-task-ingest.git
+$ cd kf-task-ingest
 ```
 
 4. Create and activate a virtual environment:
@@ -53,8 +53,8 @@ FHIR_COOKIE=<PUT-FHIR-COOKIE>
 7. Get familiar with required arguments:
 
 ```
-(venv) kidsfirst fhir-etl -h
-Usage: kidsfirst fhir-etl [OPTIONS] KF_STUDY_IDS...
+(venv) fhiretl ingest -h
+Usage: fhiretl ingest [OPTIONS] KF_STUDY_IDS...
 
   Ingest a Kids First study(ies) into a FHIR server.
 
@@ -77,7 +77,7 @@ Options:
 9. Run the following command (the KF study IDs below are exemplars):
 
 ```
-(venv) kidsfirst fhir-etl SD_ZXJFFMEF SD_46SK55A3
+(venv) fhiretl ingest SD_ZXJFFMEF SD_46SK55A3
 ```
 
 ### Running ETL from Docker (TBD)
