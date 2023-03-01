@@ -19,5 +19,5 @@ curl -f  -X POST \
 $KF_API_DATASERVICE_URL/sequencing-centers | jq '.results.kf_id'
 
 # echo "\n 🏭 Ingest test study data into Data Service ..."
-kidsfirst ingest data/SD_ME0WME0W
+kidsfirst ingest tests/data/SD_ME0WME0W
 

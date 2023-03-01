@@ -13,6 +13,7 @@
 
 set -e
 
+DATA_DIR="./.data"
 DELETE_VOLUMES=0
 INGEST_STUDY=0
 
@@ -39,13 +40,14 @@ fi
 # Delete docker-compose volumes
 if [ $DELETE_VOLUMES -eq 1 ]; then
     echo "\n🗑️ Remove old volumes ..."
-    rm -rf ./.data/fhir_postgres
-    rm -rf ./.data/hapi
+    rm -r $DATA_DIR/fhir_postgres
+    rm -r $DATA_DIR/hapi
 fi
 
 echo "\n🐳 Start docker compose stack ..."
 source .env
 docker compose down
+sleep 10
 docker compose up -d 
 
 if [ $DELETE_VOLUMES -eq 1 ]; then
@@ -54,6 +56,7 @@ if [ $DELETE_VOLUMES -eq 1 ]; then
 fi
 
 if [ $INGEST_STUDY -eq 1 ]; then
+    rm -r $DATA_DIR/LoadStage
     ./bin/setup_study.sh
 fi
 

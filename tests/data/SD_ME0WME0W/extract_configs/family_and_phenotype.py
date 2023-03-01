@@ -28,11 +28,15 @@ def observed_yes_no(x):
 
 
 operations = [
-    value_map(
+    # value_map(
+    #     in_col="participant",
+    #     m={
+    #         r"PID(\d+)": lambda x: int(x),  # strip PID and 0-padding
+    #     },
+    #     out_col=CONCEPT.PARTICIPANT.ID
+    # ),
+    keep_map(
         in_col="participant",
-        m={
-            r"PID(\d+)": lambda x: int(x),  # strip PID and 0-padding
-        },
         out_col=CONCEPT.PARTICIPANT.ID
     ),
     keep_map(
