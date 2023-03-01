@@ -1,4 +1,6 @@
-import logging, os, time
+import logging
+import os
+import time
 from collections import defaultdict
 
 from dotenv import find_dotenv, load_dotenv
@@ -37,6 +39,9 @@ logging.basicConfig(level=logging.INFO)
 DOTENV_PATH = find_dotenv()
 if DOTENV_PATH:
     load_dotenv(DOTENV_PATH)
+
+USE_ASYNC = True
+CACHE_DIR = "./.data"
 
 
 class Ingest:
@@ -241,7 +246,8 @@ class Ingest:
                 study_all_targets.add(Family)
 
             # family-relationships
-            family_relationships = study_mapped_df_dict.get("family-relationships")
+            family_relationships = study_mapped_df_dict.get(
+                "family-relationships")
             if family_relationships is not None:
                 family_relationships = family_relationships.rename(
                     columns={
@@ -333,7 +339,8 @@ class Ingest:
                 study_all_targets.add(VitalStatus)
 
             # biospecimen-diagnoses
-            biospecimen_diagnoses = study_mapped_df_dict.get("biospecimen-diagnoses")
+            biospecimen_diagnoses = study_mapped_df_dict.get(
+                "biospecimen-diagnoses")
             if biospecimen_diagnoses is not None:
                 biospecimen_diagnoses = biospecimen_diagnoses.rename(
                     columns={
@@ -462,7 +469,8 @@ class Ingest:
                 )
 
             # sequencing-experiments
-            sequencing_experiments = study_mapped_df_dict.get("sequencing-experiments")
+            sequencing_experiments = study_mapped_df_dict.get(
+                "sequencing-experiments")
             if (
                 sequencing_experiment_genomic_files is not None
                 and sequencing_experiments is not None
@@ -482,7 +490,8 @@ class Ingest:
                     on=CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
                 )
 
-            merged_df_dict[kf_study_id][DEFAULT_KEY] = clean_up_df(study_merged_df)
+            merged_df_dict[kf_study_id][DEFAULT_KEY] = clean_up_df(
+                study_merged_df)
 
             self.all_targets[kf_study_id] = [
                 target for target in all_targets if target in study_all_targets
@@ -510,8 +519,8 @@ class Ingest:
                 os.getenv("KF_API_FHIR_SERVICE_URL"),
                 [cls.class_name for cls in self.all_targets[kf_study_id]],
                 kf_study_id,
-                cache_dir="./",
-                use_async=True,
+                cache_dir=CACHE_DIR,
+                use_async=USE_ASYNC,
             ).run(merged_df_dict[kf_study_id])
 
             logging.info(f"  ✅ Loaded {kf_study_id}")
@@ -537,6 +546,6 @@ class Ingest:
         h, m = divmod(m, 60)
 
         logging.info(
-            f"✅ Finished ingesting {self.kf_study_ids}; ",
-            f"Time elapsed: {h} hours {m} minutes {s} seconds.",
+            f"✅ Finished ingesting {self.kf_study_ids} "
+            f"Time elapsed: {h} hours {m} minutes {s} seconds."
         )
