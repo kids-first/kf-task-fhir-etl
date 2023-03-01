@@ -1,8 +1,8 @@
 import os
 
 from dotenv import find_dotenv, load_dotenv
+import requests
 from requests import RequestException
-from d3b_utils.requests_retry import Session
 
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Practitioner,
@@ -35,7 +35,7 @@ FHIR_PASSWORD = os.getenv("FHIR_PASSWORD")
 
 
 def _PUT(host, api_path, resource_id, body, headers, auth=None):
-    return Session().put(
+    return requests.put(
         "/".join([v.strip("/") for v in [host, api_path, resource_id]]),
         json=body,
         headers=headers,
@@ -44,7 +44,7 @@ def _PUT(host, api_path, resource_id, body, headers, auth=None):
 
 
 def _POST(host, api_path, body, headers, auth=None):
-    return Session().post(
+    return requests.post(
         "/".join([v.strip("/") for v in [host, api_path]]),
         json=body,
         headers=headers,
@@ -76,14 +76,14 @@ def submit(entity_class, host, body):
     resource_id = body.get("id")
 
     if resource_id:
-        resp = _PUT(host, api_path, resource_id, body, headers=headers, auth=auth)
+        resp = _PUT(host, api_path, resource_id,
+                    body, headers=headers, auth=auth)
         if (resp.status_code not in {200, 201}) and (
             "no resource with this ID exists"
-            in resp.get("issue", [{}])[0].get("diagnostics", "")
+            in resp.json().get("issue", [{}])[0].get("diagnostics", "")
         ):
             resp = None
-    else:
-        body.pop("id", None)
+            body.pop("id", None)
 
     if not resp:
         resp = _POST(host, api_path, body, headers=headers, auth=auth)
@@ -91,7 +91,8 @@ def submit(entity_class, host, body):
     if resp.status_code in {200, 201}:
         return resp.json()["id"]
     else:
-        raise RequestException(f"Sent to /{api_path}:\n{body}\nGot:\n{resp.text}")
+        raise RequestException(
+            f"Sent to /{api_path}:\n{body}\nGot:\n{resp.text}")
 
 
 # Override submitter
