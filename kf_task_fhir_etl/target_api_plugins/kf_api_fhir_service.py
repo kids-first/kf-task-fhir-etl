@@ -9,6 +9,7 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Organization,
     PractitionerRole,
     Patient,
+    ProbandStatus,
     FamilyRelationship,
     Family,
     ResearchStudy,
@@ -98,6 +99,7 @@ Practitioner.submit = classmethod(submit)
 Organization.submit = classmethod(submit)
 PractitionerRole.submit = classmethod(submit)
 Patient.submit = classmethod(submit)
+ProbandStatus.submit = classmethod(submit)
 FamilyRelationship.submit = classmethod(submit)
 Family.submit = classmethod(submit)
 ResearchStudy.submit = classmethod(submit)
@@ -115,6 +117,7 @@ all_targets = [
     Organization,
     PractitionerRole,
     Patient,
+    ProbandStatus,
     FamilyRelationship,
     Family,
     ResearchStudy,
