@@ -1,5 +1,6 @@
 import os
 
+from pprint import pprint
 from dotenv import find_dotenv, load_dotenv
 import requests
 from requests import RequestException
