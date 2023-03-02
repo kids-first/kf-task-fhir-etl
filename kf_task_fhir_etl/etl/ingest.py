@@ -13,6 +13,7 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Organization,
     PractitionerRole,
     Patient,
+    ProbandStatus,
     FamilyRelationship,
     Family,
     ResearchStudy,
@@ -213,7 +214,13 @@ class Ingest:
                     with_merge_detail_dfs=False,
                     on=CONCEPT.STUDY.TARGET_SERVICE_ID,
                 )
-                study_all_targets.update([Patient, ResearchSubject])
+                study_all_targets.update(
+                    [
+                        Patient,
+                        ProbandStatus,
+                        ResearchSubject,
+                    ]
+                )
 
             # families
             families = study_mapped_df_dict.get("families")
@@ -372,7 +379,12 @@ class Ingest:
                     }
                 )
                 on = [CONCEPT.PARTICIPANT.TARGET_SERVICE_ID]
-                study_all_targets.update([SequencingCenter, Specimen])
+                study_all_targets.update(
+                    [
+                        SequencingCenter,
+                        Specimen,
+                    ]
+                )
 
                 if biospecimen_diagnoses is not None:
                     on.append(CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID)
@@ -457,6 +469,7 @@ class Ingest:
             ):
                 sequencing_experiments = sequencing_experiments.rename(
                     columns={
+                        "experiment_strategy": CONCEPT.SEQUENCING.STRATEGY,
                         "external_id": CONCEPT.SEQUENCING.ID,
                         "kf_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
                         "visible": CONCEPT.SEQUENCING.VISIBLE,
