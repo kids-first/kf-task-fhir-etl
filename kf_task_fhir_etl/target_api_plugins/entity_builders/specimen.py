@@ -453,12 +453,14 @@ class Specimen:
     def build_entity(cls, record, get_target_id_from_record):
         study_id = record[CONCEPT.STUDY.TARGET_SERVICE_ID]
         biospecimen_id = record[CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID]
-        external_aliquot_id = record[CONCEPT.BIOSPECIMEN.ID]
+        consent_type = record.get(CONCEPT.BIOSPECIMEN.CONSENT_SHORT_NAME)
+        dbgap_consent_code = record.get(CONCEPT.BIOSPECIMEN.DBGAP_STYLE_CONSENT_CODE)
+        external_sample_id = record.get(CONCEPT.BIOSPECIMEN_GROUP.ID)
+        external_aliquot_id = record.get(CONCEPT.BIOSPECIMEN.ID)
         tissue_type = record.get(CONCEPT.BIOSPECIMEN.TISSUE_TYPE)
         composition = record.get(CONCEPT.BIOSPECIMEN.COMPOSITION)
         analyte = record[CONCEPT.BIOSPECIMEN.ANALYTE]
         ncit_id_tissue_type = record.get(CONCEPT.BIOSPECIMEN.NCIT_TISSUE_TYPE_ID)
-        # tumor_descriptor = record.get(CONCEPT.BIOSPECIMEN.TUMOR_DESCRIPTOR)
         event_age_days = record.get(CONCEPT.BIOSPECIMEN.EVENT_AGE_DAYS)
         volume_ul = record.get(CONCEPT.BIOSPECIMEN.VOLUME_UL)
         sample_procurement = record.get(CONCEPT.BIOSPECIMEN.SAMPLE_PROCUREMENT)
@@ -492,10 +494,35 @@ class Specimen:
             },
         }
 
+        # meta.security
+        if consent_type:
+            entity["meta"].setdefault("security", []).append(
+                {
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/biospecimens?consent_type=",
+                    "code": consent_type,
+                }
+            )
+        if dbgap_consent_code:
+            entity["meta"].setdefault("security", []).append(
+                {
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/biospecimens?dbgap_consent_code=",
+                    "code": dbgap_consent_code,
+                }
+            )
+
         # identifier
+        if external_sample_id:
+            entity["identifier"].append(
+                {
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/biospecimens?external_sample_id=",
+                    "use": "secondary",
+                    "value": external_sample_id,
+                }
+            )
         if external_aliquot_id:
             entity["identifier"].append(
                 {
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/biospecimens?external_aliquot_id=",
                     "use": "secondary",
                     "value": external_aliquot_id,
                 }

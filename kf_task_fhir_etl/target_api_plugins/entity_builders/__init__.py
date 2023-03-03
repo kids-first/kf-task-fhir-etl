@@ -8,6 +8,9 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders.practitioner_role impor
     PractitionerRole,
 )
 from kf_task_fhir_etl.target_api_plugins.entity_builders.patient import Patient
+from kf_task_fhir_etl.target_api_plugins.entity_builders.proband_status import (
+    ProbandStatus,
+)
 from kf_task_fhir_etl.target_api_plugins.entity_builders.family_relationship import (
     FamilyRelationship,
 )

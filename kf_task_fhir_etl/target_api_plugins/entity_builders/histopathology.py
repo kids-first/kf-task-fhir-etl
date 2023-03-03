@@ -4,6 +4,7 @@ from rows of tabular disease biospecimen association data.
 """
 from abc import abstractmethod
 
+from kf_lib_data_ingest.common import constants
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Patient,
@@ -14,6 +15,14 @@ from kf_task_fhir_etl.common.utils import not_none, drop_none, yield_resource_id
 
 # http://hl7.org/fhir/ValueSet/observation-status
 status_code = "final"
+
+missing_data_values = {
+    "N/A",
+    constants.COMMON.NOT_APPLICABLE,
+    constants.COMMON.NOT_AVAILABLE,
+    constants.COMMON.NOT_REPORTED,
+    "Unavailable",
+}
 
 
 class Histopathology:
@@ -40,6 +49,7 @@ class Histopathology:
         biospecimen_diagnosis_id = record[
             CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID
         ]
+        tumor_descriptor = record.get(CONCEPT.BIOSPECIMEN.TUMOR_DESCRIPTOR)
 
         entity = {
             "resourceType": cls.api_path,
@@ -105,6 +115,9 @@ class Histopathology:
                 )
             },
         }
+
+        if tumor_descriptor and tumor_descriptor not in missing_data_values:
+            entity["valueCodeableConcept"] = {"text": tumor_descriptor}
 
         return entity
 
