@@ -1,6 +1,6 @@
 """
 Builds FHIR Observation resources (https://www.hl7.org/fhir/observation.html)
-from rows of tabular participant broband status data.
+from rows of tabular participant proband status data.
 """
 from abc import abstractmethod
 
