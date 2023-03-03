@@ -40,7 +40,7 @@ DOTENV_PATH = find_dotenv()
 if DOTENV_PATH:
     load_dotenv(DOTENV_PATH)
 
-USE_ASYNC = True
+USE_ASYNC = False
 CACHE_DIR = "./.data"
 
 
