@@ -69,9 +69,14 @@ hapi:
     #   use_apache_address_strategy_https: false
     ### enable to set the Server URL
     #    server_address: http://hapi.fhir.org/baseR4
-    #    defer_indexing_for_codesystems_of_size: 101
+    #    defer_indexin_for_codesystems_of_size: 101
     #    install_transitive_ig_dependencies: true
-    #    implementationguides:
+    # enable_repository_validating_interceptor: true
+    # implementationguides:
+    #   NCPI-FHIR-Implementation-Guide:
+    #     name: NCPI-FHIR-Implementation-Guide
+    #     version: 0.2.0
+    #     url: classPath:/ncpi-package.gz
     ###    example from registry (packages.fhir.org)
     #      swiss:
     #        name: swiss.mednet.fhir
@@ -160,9 +165,9 @@ hapi:
         server_address: "http://hapi.fhir.org/baseR4"
         refuse_to_fetch_third_party_urls: false
         fhir_version: R4
-    validation:
-      requests_enabled: true
-      responses_enabled: true
+    # validation:
+    #   requests_enabled: true
+    #   responses_enabled: true
 #    binary_storage_enabled: true
 #    bulk_export_enabled: true
 #    subscription:
