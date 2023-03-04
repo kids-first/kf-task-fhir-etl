@@ -12,7 +12,7 @@ services:
         target: /data/hapi/application.yaml
     volumes:
       - ./.data/hapi:/data/hapi
-      - ./ncpi-package.gz:/data/hapi/ncpi-package.gz
+      # - ./ncpi-package.gz:/data/hapi/ncpi-package.gz
     env_file:
       - .env
     environment:
