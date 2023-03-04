@@ -1,0 +1,80 @@
+version: "3.7"
+
+services:
+  smilecdr:
+    container_name: smilecdr
+    image: kidsfirstdrc/smilecdr:2021.02.R05
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+      - "9100:9100"
+      - "8001:8001"
+      - "9200:9200"
+      - "9201:9201"
+    depends_on:
+      - postgres_cdr
+    env_file:
+      - .env
+    volumes:
+      - ./settings/master.properties:/home/smile/smilecdr/classes/cdr-config-Master.properties
+      - ./settings/logback.xml:/home/smile/smilecdr/classes/logback.xml
+      - ./settings/jvm.sh:/home/smile/smilecdr/bin/setenv
+      - ./settings/ncpi-package.gz:/home/smile/smilecdr/classes/ncpi-package.gz
+      - ./settings/ncpi-package-spec.json:/home/smile/smilecdr/classes/ncpi-package-spec.json
+      - smilecdr_log:/home/smile/smilecdr/log
+      - smilecdr_mq:/home/smile/smilecdr/activemq-data
+      - smilecdr_lucene:/home/smile/smilecdr/database/lucene_fhir_persistence
+    restart: unless-stopped
+
+  postgres_cdr:
+    container_name: postgres_cdr
+    build:
+      context: ./postgres
+    image: postgres_cdr
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: "${POSTGRES_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_ADMIN_PASSWORD}"
+      FHIR_DB_NAME: "${FHIR_DB_NAME}"
+      FHIR_DB_USER: "${FHIR_DB_USERNAME}"
+      FHIR_DB_PASSWORD: "${FHIR_DB_PASSWORD}"
+    volumes:
+      - smilecdr_db:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  dataservice:
+    image: kfdrc/kf-api-dataservice:latest
+    command: /bin/ash -c "sleep 5; ./bin/run.sh"
+    env_file:
+      - .env
+    environment:
+      FLASK_CONFIG: development
+      PG_USER: "${POSTGRES_ADMIN_USER}"
+      PG_PASS: "${POSTGRES_ADMIN_PASSWORD}"
+      PG_NAME: "${POSTGRES_DATASERVICE_DB}"
+      PG_HOST: "${POSTGRES_DATASERVICE_HOST}"
+      PG_PORT: "${POSTGRES_DATASERVICE_PORT}"
+    depends_on:
+      - dataservice-pg
+    ports:
+      - "5000:80"
+
+  dataservice-pg:
+    image: postgres:11.1
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: "${POSTGRES_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_ADMIN_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DATASERVICE_DB}"
+    ports:
+      - "5433:5432"
+
+volumes:
+  smilecdr_db:
+  smilecdr_mq:
+  smilecdr_log:
+  smilecdr_lucene:

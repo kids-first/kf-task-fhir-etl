@@ -1,0 +1,7 @@
+{
+  "name": "NCPI-FHIR-Implementation-Guide",
+  "version" : "0.2.0",
+  "packageUrl" : "classpath:/ncpi-package.gz",
+  "installMode" : "STORE_AND_INSTALL",
+  "fetchDependencies" : false
+}

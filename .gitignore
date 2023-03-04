@@ -147,3 +147,6 @@ delete.py
 # Ingest outputs
 output/
 logs/
+
+# Fhir configuration
+package/
