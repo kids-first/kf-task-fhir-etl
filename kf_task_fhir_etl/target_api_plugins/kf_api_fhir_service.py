@@ -84,9 +84,9 @@ def submit(entity_class, host, body):
             in resp.json().get("issue", [{}])[0].get("diagnostics", "")
         ):
             resp = None
-            body.pop("id", None)
 
     if not resp:
+        body.pop("id", None)
         resp = _POST(host, api_path, body, headers=headers, auth=auth)
 
     if resp.status_code in {200, 201}:
