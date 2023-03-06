@@ -8,6 +8,8 @@ set -e
 
 echo "\n ✨ Creating test study and sequencing center in Data Service ..."
 
+source .env
+
 curl -f -X POST \
 -H "Content-Type: application/json" \
 -d '{"kf_id": "SD_ME0WME0W", "external_id": "cat-study"}' \
