@@ -21,8 +21,8 @@ The Kids First FHIR ETL Task Service, built off of the [Kids First Data Ingest L
 3. Clone this repository:
 
 ```
-$ git clone https://github.com/kids-first/kf-task-fhir-etl.git
-$ cd kf-task-fhir-etl
+$ git clone https://github.com/kids-first/kf-task-ingest.git
+$ cd kf-task-ingest
 ```
 
 4. Create and activate a virtual environment:
@@ -53,8 +53,8 @@ FHIR_COOKIE=<PUT-FHIR-COOKIE>
 7. Get familiar with required arguments:
 
 ```
-(venv) kidsfirst fhir-etl -h
-Usage: kidsfirst fhir-etl [OPTIONS] KF_STUDY_IDS...
+(venv) fhiretl ingest -h
+Usage: fhiretl ingest [OPTIONS] KF_STUDY_IDS...
 
   Ingest a Kids First study(ies) into a FHIR server.
 
@@ -77,7 +77,87 @@ Options:
 9. Run the following command (the KF study IDs below are exemplars):
 
 ```
-(venv) kidsfirst fhir-etl SD_ZXJFFMEF SD_46SK55A3
+(venv) fhiretl ingest SD_ZXJFFMEF SD_46SK55A3
 ```
 
-### Running ETL from Docker (TBD)
+## Contributing 
+
+If you are a developer on the project you will need to get your development 
+environment setup in order to modify code and run tests. You can do this easily
+in a few steps.
+
+There are setup scripts to run either the open source HAPI FHIR server or the 
+commercial version of HAPI, Smile CDR. 
+
+### Setup - Smile CDR Docker-Compose Stack
+Since we use Smile CDR in production, we will use it in our development
+environment and develop against it. HAPI is just included for experimentation
+and convenience.
+
+```shell
+# Get the source code
+git clone git@github.com:kids-first/kf-task-fhir-etl.git
+cd kf-task-fhir-etl
+
+# Run the development environment setup which does the following:
+# - Setup your virtualenv if you don't already have one
+# - Create the necessary .env file if you don't already have one
+# - Delete any old docker volumes
+# - Bring up Data Service in the docker compose stack
+# - Bring up Smile CDR in the docker compose stack
+# - Ingest a test study `SD_ME0WME0W` into Data Service
+
+./bin/setup_smilecdr.sh --delete-volumes --ingest
+```
+Note that all of the Smile CDR files are in kf-task-fhir-etl/smilecdr. This 
+includes necessary config files and the docker-compose.yml file.
+
+If all goes well, you can test the CLI out by ETLing the test study from 
+Data Service into the FHIR server:
+
+```shell
+fhiretl ingest SD_ME0WME0W
+```
+
+Now check the FHIR server to ensure data was created. You can find the 
+username/password and FHIR endpoint in the kf-task-fhir-etl/.env file that was
+created during setup.
+
+```shell
+# You should see a total of 9 Patients
+curl -v -X GET -H 'Content-Type: application/json' \
+-u admin:password http://127.0.0.1:8000/Patient\?_summary\=count
+```
+
+### Setup - (Optional) HAPI Docker-Compose Stack
+**Only do this if you want to work with HAPI instead of Smile CDR**
+
+```shell
+# Get the source code
+git clone git@github.com:kids-first/kf-task-fhir-etl.git
+cd kf-task-fhir-etl
+
+# Run the development environment setup which does the same thing as 
+the smilecdr setup script
+./bin/setup_hapi.sh --delete-volumes --ingest
+```
+Note that all of the HAPI files are in kf-task-fhir-etl/hapi. This 
+includes necessary config files and the docker-compose.yml file.
+
+If all goes well, you can test the CLI out by ETLing the test study from 
+Data Service into the FHIR server:
+
+```shell
+fhiretl ingest SD_ME0WME0W
+```
+
+Now check the FHIR server to ensure data was created. You can find the 
+username/password and FHIR endpoint in the kf-task-fhir-etl/.env file that was
+created during setup.
+
+```shell
+# You should see a total of 9 Patients
+curl -v -X GET -H 'Content-Type: application/json' \
+-u admin:password http://127.0.0.1:8080/fhir/Patient\?_summary\=count
+```
+

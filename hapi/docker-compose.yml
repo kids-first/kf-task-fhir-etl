@@ -1,0 +1,67 @@
+version: "3.7"
+
+services:
+  fhir:
+    image: "hapiproject/hapi:v5.4.1"
+    depends_on:
+      - fhir_postgres
+    ports:
+      - "8080:8080"
+    configs:
+      - source: fhir
+        target: /data/hapi/application.yaml
+    volumes:
+      - ./.data/hapi:/data/hapi
+      # - ./ncpi-package.gz:/data/hapi/ncpi-package.gz
+    env_file:
+      - .env
+    environment:
+      POSTGRES_FHIR_HOST: "${POSTGRES_FHIR_HOST}"
+      POSTGRES_FHIR_PORT: "${POSTGRES_FHIR_PORT}"
+      POSTGRES_FHIR_DATABASE: "${POSTGRES_FHIR_DB}"
+      POSTGRES_FHIR_USER: "${POSTGRES_ADMIN_USER}"
+      POSTGRES_FHIR_PASSWORD: "${POSTGRES_ADMIN_PASSWORD}"
+      SPRING_CONFIG_LOCATION: "file:///data/hapi/application.yaml"
+
+  fhir_postgres:
+    image: "postgres:14"
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: "${POSTGRES_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_ADMIN_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_FHIR_DB}"
+    command: -p 5434
+    expose:
+      - "5434"
+    ports:
+      - "5434:5434"
+    volumes:
+      - ./.data/fhir_postgres:/var/lib/postgresql/data
+
+  dataservice:
+    image: kfdrc/kf-api-dataservice:latest
+    command: /bin/ash -c "sleep 5; ./bin/run.sh"
+    environment:
+      FLASK_CONFIG: development
+      PG_USER: "${POSTGRES_ADMIN_USER}"
+      PG_PASS: "${POSTGRES_ADMIN_PASSWORD}"
+      PG_NAME: "${POSTGRES_DATASERVICE_DB}"
+      PG_HOST: "${POSTGRES_DATASERVICE_HOST}"
+    depends_on:
+      - dataservice-pg
+    ports:
+      - "5000:80"
+  dataservice-pg:
+    image: postgres:11.1
+    environment:
+      POSTGRES_USER: "${POSTGRES_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_ADMIN_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DATASERVICE_DB}"
+    ports:
+      - "5433:5432"
+
+configs:
+  fhir:
+    file: ./fhir.yaml

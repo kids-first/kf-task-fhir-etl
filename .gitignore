@@ -140,3 +140,13 @@ delete.py
 
 # Miscellaneous
 .DS_Store
+
+# Service data
+.data/
+
+# Ingest outputs
+output/
+logs/
+
+# Fhir configuration
+package/
