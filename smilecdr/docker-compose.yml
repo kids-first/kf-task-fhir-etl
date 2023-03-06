@@ -19,8 +19,8 @@ services:
       - ./settings/master.properties:/home/smile/smilecdr/classes/cdr-config-Master.properties
       - ./settings/logback.xml:/home/smile/smilecdr/classes/logback.xml
       - ./settings/jvm.sh:/home/smile/smilecdr/bin/setenv
-      - ./settings/ncpi-package.gz:/home/smile/smilecdr/classes/ncpi-package.gz
-      - ./settings/ncpi-package-spec.json:/home/smile/smilecdr/classes/ncpi-package-spec.json
+      # - ./settings/ncpi-package.gz:/home/smile/smilecdr/classes/ncpi-package.gz
+      # - ./settings/ncpi-package-spec.json:/home/smile/smilecdr/classes/ncpi-package-spec.json
       - smilecdr_log:/home/smile/smilecdr/log
       - smilecdr_mq:/home/smile/smilecdr/activemq-data
       - smilecdr_lucene:/home/smile/smilecdr/database/lucene_fhir_persistence
