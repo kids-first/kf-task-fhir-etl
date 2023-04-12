@@ -443,6 +443,7 @@ class Specimen:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
+        assert not_none(get_target_id_from_record(Patient, record))
         return {"identifier": not_none(record[CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID])}
 
     @classmethod
@@ -474,7 +475,12 @@ class Specimen:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {

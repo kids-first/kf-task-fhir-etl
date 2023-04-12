@@ -33,6 +33,11 @@ class Histopathology:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
+        assert (
+            not_none(get_target_id_from_record(Patient, record))
+            and not_none(get_target_id_from_record(Disease, record))
+            and not_none(get_target_id_from_record(Specimen, record))
+        )
         return {
             "identifier": not_none(
                 record[CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID]
@@ -56,7 +61,12 @@ class Histopathology:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {

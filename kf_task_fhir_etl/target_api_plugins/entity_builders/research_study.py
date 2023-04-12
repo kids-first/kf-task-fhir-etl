@@ -60,7 +60,12 @@ class ResearchStudy:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -105,9 +110,31 @@ class ResearchStudy:
 
         # keyword
         if program:
-            entity.setdefault("keyword", []).append({"coding": [{"code": program}]})
+            entity.setdefault("keyword", []).append(
+                {
+                    "coding": [
+                        {
+                            "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies?program=",
+                            "code": program,
+                            "display": program,
+                        }
+                    ],
+                    "text": program,
+                }
+            )
         if short_code:
-            entity.setdefault("keyword", []).append({"coding": [{"code": short_code}]})
+            entity.setdefault("keyword", []).append(
+                {
+                    "coding": [
+                        {
+                            "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies?short_code=",
+                            "code": short_code,
+                            "display": short_code,
+                        }
+                    ],
+                    "text": short_code,
+                }
+            )
 
         # principalInvestigator
         if investigator_id:

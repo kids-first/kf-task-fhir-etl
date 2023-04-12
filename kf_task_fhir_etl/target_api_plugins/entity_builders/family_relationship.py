@@ -315,6 +315,27 @@ class FamilyRelationship:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
+        assert not_none(
+            get_target_id_from_record(
+                Patient,
+                {
+                    CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: record[
+                        CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID
+                    ]
+                },
+            )
+        )
+        assert not_none(
+            get_target_id_from_record(
+                Patient,
+                {
+                    CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: record[
+                        CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID
+                    ]
+                },
+            )
+        )
+
         return {
             "identifier": not_none(
                 record[CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID]
@@ -341,7 +362,12 @@ class FamilyRelationship:
                 "profile": [
                     "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/family-relationship"
                 ],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -368,6 +394,7 @@ class FamilyRelationship:
             entity["identifier"].append(
                 {
                     "use": "secondary",
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/family_relationships?external_id=",
                     "value": external_id,
                 }
             )

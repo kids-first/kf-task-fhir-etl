@@ -43,6 +43,7 @@ class Disease:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
+        assert not_none(get_target_id_from_record(Patient, record))
         return {"identifier": not_none(record[CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID])}
 
     @classmethod
@@ -69,7 +70,12 @@ class Disease:
                 "profile": [
                     "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/disease"
                 ],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {

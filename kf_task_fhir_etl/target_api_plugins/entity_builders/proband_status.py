@@ -54,7 +54,12 @@ class ProbandStatus:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {

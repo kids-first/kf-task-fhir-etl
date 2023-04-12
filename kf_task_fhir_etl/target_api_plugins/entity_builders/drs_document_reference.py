@@ -6,11 +6,13 @@ import os
 from abc import abstractmethod
 
 import pandas as pd
+import numpy as np
 
 from requests import RequestException
 
 from kf_lib_data_ingest.common import constants
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
+from kf_lib_data_ingest.etl.load.load_v2 import LoadStage
 from kf_task_fhir_etl.target_api_plugins.entity_builders import Patient, Specimen
 from kf_task_fhir_etl.common.utils import not_none, drop_none, yield_resource_ids
 from d3b_utils.requests_retry import Session
@@ -181,13 +183,24 @@ class DRSDocumentReference:
             transfromed_record = {
                 CONCEPT.STUDY.TARGET_SERVICE_ID: names[0],
                 CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID: names[1],
-                CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: group.get(
-                    CONCEPT.PARTICIPANT.TARGET_SERVICE_ID
-                ).unique(),
-                CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID: group.get(
-                    CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID
-                ).unique(),
             }
+
+            pb = group.get(
+                [
+                    CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
+                ]
+            ).drop_duplicates()
+            transfromed_record.update(
+                {
+                    CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: pb.get(
+                        CONCEPT.PARTICIPANT.TARGET_SERVICE_ID
+                    ),
+                    CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID: pb.get(
+                        CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID
+                    ),
+                }
+            )
 
             try:
                 transfromed_record.update(
@@ -260,7 +273,12 @@ class DRSDocumentReference:
                 "profile": [
                     "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/drs-document-reference"
                 ],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -303,14 +321,21 @@ class DRSDocumentReference:
 
         # subject
         # TODO: handle multi-Patient DocumentReference resources
-        if len(participant_id_list) == 1:
-            subject_id = not_none(
-                get_target_id_from_record(
-                    Patient,
-                    {CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id_list[0]},
+        if participant_id_list.nunique() == 1:
+            try:
+                patient_id = not_none(
+                    get_target_id_from_record(
+                        Patient,
+                        {
+                            CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id_list.tolist()[
+                                0
+                            ]
+                        },
+                    )
                 )
-            )
-            entity["subject"] = {"reference": f"{Patient.api_path}/{subject_id}"}
+                entity["subject"] = {"reference": f"{Patient.api_path}/{patient_id}"}
+            except:
+                pass
 
         # securityLabel
         security_label_list = []
@@ -394,14 +419,22 @@ class DRSDocumentReference:
             constants.GENOMIC_FILE.DATA_TYPE.VARIANT_CALLS_INDEX,
         }:
             related = []
-            for biospecimen_id in biospecimen_id_list:
-                specimen_id = not_none(
-                    get_target_id_from_record(
-                        Specimen,
-                        {CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID: biospecimen_id},
+            for participant_id, biospecimen_id in zip(
+                participant_id_list, biospecimen_id_list
+            ):
+                try:
+                    specimen_id = not_none(
+                        get_target_id_from_record(
+                            Specimen,
+                            {
+                                CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id,
+                                CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID: biospecimen_id,
+                            },
+                        )
                     )
-                )
-                related.append({"reference": f"{Specimen.api_path}/{specimen_id}"})
+                    related.append({"reference": f"{Specimen.api_path}/{specimen_id}"})
+                except:
+                    pass
             if related:
                 entity.setdefault("context", {})["related"] = related
 
