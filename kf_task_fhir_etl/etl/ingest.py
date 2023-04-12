@@ -224,158 +224,158 @@ class Ingest:
                         with_merge_detail_dfs=False,
                         on=CONCEPT.STUDY.TARGET_SERVICE_ID,
                     )
-                    # study_all_targets.update(
-                    #     [
-                    #         Patient,
-                    #         ProbandStatus,
-                    #         ResearchSubject,
-                    #     ]
-                    # )
+                    study_all_targets.update(
+                        [
+                            Patient,
+                            ProbandStatus,
+                            ResearchSubject,
+                        ]
+                    )
 
-            # # families
-            # families = study_mapped_df_dict.get("families")
-            # if families is not None:
-            #     families = families.rename(
-            #         columns={
-            #             "external_id": CONCEPT.FAMILY.ID,
-            #             "kf_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
-            #             "visible": CONCEPT.FAMILY.VISIBLE,
-            #         }
-            #     )
-            #     families = families[families[CONCEPT.FAMILY.VISIBLE] == True]
-            #     if not families.empty:
-            #         study_merged_df = outer_merge(
-            #             study_merged_df,
-            #             families,
-            #             with_merge_detail_dfs=False,
-            #             on=CONCEPT.FAMILY.TARGET_SERVICE_ID,
-            #         )
-            #         study_all_targets.add(Family)
+            # families
+            families = study_mapped_df_dict.get("families")
+            if families is not None:
+                families = families.rename(
+                    columns={
+                        "external_id": CONCEPT.FAMILY.ID,
+                        "kf_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
+                        "visible": CONCEPT.FAMILY.VISIBLE,
+                    }
+                )
+                families = families[families[CONCEPT.FAMILY.VISIBLE] == True]
+                if not families.empty:
+                    study_merged_df = outer_merge(
+                        study_merged_df,
+                        families,
+                        with_merge_detail_dfs=False,
+                        on=CONCEPT.FAMILY.TARGET_SERVICE_ID,
+                    )
+                    study_all_targets.add(Family)
 
-            # # family-relationships
-            # family_relationships = study_mapped_df_dict.get("family-relationships")
-            # if family_relationships is not None:
-            #     family_relationships = family_relationships.rename(
-            #         columns={
-            #             "participant1_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID,
-            #             "participant2_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID,
-            #             "external_id": CONCEPT.FAMILY_RELATIONSHIP.ID,
-            #             "kf_id": CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID,
-            #             "participant1_to_participant2_relation": CONCEPT.FAMILY_RELATIONSHIP.RELATION_FROM_1_TO_2,
-            #             "visible": CONCEPT.FAMILY_RELATIONSHIP.VISIBLE,
-            #         }
-            #     )
-            #     family_relationships = family_relationships[
-            #         family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
-            #     ]
-            #     if not family_relationships.empty:
-            #         merged_df_dict[kf_study_id]["family_relationship"] = clean_up_df(
-            #             family_relationships
-            #         )
-            #         study_all_targets.add(FamilyRelationship)
+            # family-relationships
+            family_relationships = study_mapped_df_dict.get("family-relationships")
+            if family_relationships is not None:
+                family_relationships = family_relationships.rename(
+                    columns={
+                        "participant1_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID,
+                        "participant2_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID,
+                        "external_id": CONCEPT.FAMILY_RELATIONSHIP.ID,
+                        "kf_id": CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID,
+                        "participant1_to_participant2_relation": CONCEPT.FAMILY_RELATIONSHIP.RELATION_FROM_1_TO_2,
+                        "visible": CONCEPT.FAMILY_RELATIONSHIP.VISIBLE,
+                    }
+                )
+                family_relationships = family_relationships[
+                    family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
+                ]
+                if not family_relationships.empty:
+                    merged_df_dict[kf_study_id]["family_relationship"] = clean_up_df(
+                        family_relationships
+                    )
+                    study_all_targets.add(FamilyRelationship)
 
-            # # diagnoses
-            # diagnoses = study_mapped_df_dict.get("diagnoses")
-            # if diagnoses is not None:
-            #     diagnoses = diagnoses.rename(
-            #         columns={
-            #             "external_id": CONCEPT.DIAGNOSIS.ID,
-            #             "source_text_diagnosis": CONCEPT.DIAGNOSIS.NAME,
-            #             "diagnosis_category": CONCEPT.DIAGNOSIS.CATEGORY,
-            #             "source_text_tumor_location": CONCEPT.DIAGNOSIS.TUMOR_LOCATION,
-            #             "age_at_event_days": CONCEPT.DIAGNOSIS.EVENT_AGE_DAYS,
-            #             "mondo_id_diagnosis": CONCEPT.DIAGNOSIS.MONDO_ID,
-            #             "icd_id_diagnosis": CONCEPT.DIAGNOSIS.ICD_ID,
-            #             "uberon_id_tumor_location": CONCEPT.DIAGNOSIS.UBERON_TUMOR_LOCATION_ID,
-            #             "ncit_id_diagnosis": CONCEPT.DIAGNOSIS.NCIT_ID,
-            #             "spatial_descriptor": CONCEPT.DIAGNOSIS.SPATIAL_DESCRIPTOR,
-            #             "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-            #             "kf_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-            #             "visible": CONCEPT.DIAGNOSIS.VISIBLE,
-            #         }
-            #     )
-            #     diagnoses = diagnoses[diagnoses[CONCEPT.DIAGNOSIS.VISIBLE] == True]
-            #     if not diagnoses.empty:
-            #         study_merged_df = outer_merge(
-            #             study_merged_df,
-            #             diagnoses,
-            #             with_merge_detail_dfs=False,
-            #             on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-            #         )
-            #         study_all_targets.add(Disease)
+            # diagnoses
+            diagnoses = study_mapped_df_dict.get("diagnoses")
+            if diagnoses is not None:
+                diagnoses = diagnoses.rename(
+                    columns={
+                        "external_id": CONCEPT.DIAGNOSIS.ID,
+                        "source_text_diagnosis": CONCEPT.DIAGNOSIS.NAME,
+                        "diagnosis_category": CONCEPT.DIAGNOSIS.CATEGORY,
+                        "source_text_tumor_location": CONCEPT.DIAGNOSIS.TUMOR_LOCATION,
+                        "age_at_event_days": CONCEPT.DIAGNOSIS.EVENT_AGE_DAYS,
+                        "mondo_id_diagnosis": CONCEPT.DIAGNOSIS.MONDO_ID,
+                        "icd_id_diagnosis": CONCEPT.DIAGNOSIS.ICD_ID,
+                        "uberon_id_tumor_location": CONCEPT.DIAGNOSIS.UBERON_TUMOR_LOCATION_ID,
+                        "ncit_id_diagnosis": CONCEPT.DIAGNOSIS.NCIT_ID,
+                        "spatial_descriptor": CONCEPT.DIAGNOSIS.SPATIAL_DESCRIPTOR,
+                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                        "kf_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
+                        "visible": CONCEPT.DIAGNOSIS.VISIBLE,
+                    }
+                )
+                diagnoses = diagnoses[diagnoses[CONCEPT.DIAGNOSIS.VISIBLE] == True]
+                if not diagnoses.empty:
+                    study_merged_df = outer_merge(
+                        study_merged_df,
+                        diagnoses,
+                        with_merge_detail_dfs=False,
+                        on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    )
+                    study_all_targets.add(Disease)
 
-            # # phenotypes
-            # phenotypes = study_mapped_df_dict.get("phenotypes")
-            # if phenotypes is not None:
-            #     phenotypes = phenotypes.rename(
-            #         columns={
-            #             "external_id": CONCEPT.PHENOTYPE.ID,
-            #             "source_text_phenotype": CONCEPT.PHENOTYPE.NAME,
-            #             "hpo_id_phenotype": CONCEPT.PHENOTYPE.HPO_ID,
-            #             "snomed_id_phenotype": CONCEPT.PHENOTYPE.SNOMED_ID,
-            #             "observed": CONCEPT.PHENOTYPE.OBSERVED,
-            #             "age_at_event_days": CONCEPT.PHENOTYPE.EVENT_AGE_DAYS,
-            #             "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-            #             "kf_id": CONCEPT.PHENOTYPE.TARGET_SERVICE_ID,
-            #             "visible": CONCEPT.PHENOTYPE.VISIBLE,
-            #         }
-            #     )
-            #     phenotypes = phenotypes[phenotypes[CONCEPT.PHENOTYPE.VISIBLE] == True]
-            #     if not phenotypes.empty:
-            #         study_merged_df = outer_merge(
-            #             study_merged_df,
-            #             phenotypes,
-            #             with_merge_detail_dfs=False,
-            #             on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-            #         )
-            #         study_all_targets.add(Phenotype)
+            # phenotypes
+            phenotypes = study_mapped_df_dict.get("phenotypes")
+            if phenotypes is not None:
+                phenotypes = phenotypes.rename(
+                    columns={
+                        "external_id": CONCEPT.PHENOTYPE.ID,
+                        "source_text_phenotype": CONCEPT.PHENOTYPE.NAME,
+                        "hpo_id_phenotype": CONCEPT.PHENOTYPE.HPO_ID,
+                        "snomed_id_phenotype": CONCEPT.PHENOTYPE.SNOMED_ID,
+                        "observed": CONCEPT.PHENOTYPE.OBSERVED,
+                        "age_at_event_days": CONCEPT.PHENOTYPE.EVENT_AGE_DAYS,
+                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                        "kf_id": CONCEPT.PHENOTYPE.TARGET_SERVICE_ID,
+                        "visible": CONCEPT.PHENOTYPE.VISIBLE,
+                    }
+                )
+                phenotypes = phenotypes[phenotypes[CONCEPT.PHENOTYPE.VISIBLE] == True]
+                if not phenotypes.empty:
+                    study_merged_df = outer_merge(
+                        study_merged_df,
+                        phenotypes,
+                        with_merge_detail_dfs=False,
+                        on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    )
+                    study_all_targets.add(Phenotype)
 
-            # # outcomes
-            # outcomes = study_mapped_df_dict.get("outcomes")
-            # if outcomes is not None:
-            #     outcomes = outcomes.rename(
-            #         columns={
-            #             "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-            #             "age_at_event_days": CONCEPT.OUTCOME.EVENT_AGE_DAYS,
-            #             "disease_related": CONCEPT.OUTCOME.DISEASE_RELATED,
-            #             "external_id": CONCEPT.OUTCOME.ID,
-            #             "kf_id": CONCEPT.OUTCOME.TARGET_SERVICE_ID,
-            #             "visible": CONCEPT.OUTCOME.VISIBLE,
-            #             "vital_status": CONCEPT.OUTCOME.VITAL_STATUS,
-            #         }
-            #     )
-            #     outcomes = outcomes[outcomes[CONCEPT.OUTCOME.VISIBLE] == True]
-            #     if not outcomes.empty:
-            #         study_merged_df = outer_merge(
-            #             study_merged_df,
-            #             outcomes,
-            #             with_merge_detail_dfs=False,
-            #             on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-            #         )
-            #         study_all_targets.add(VitalStatus)
+            # outcomes
+            outcomes = study_mapped_df_dict.get("outcomes")
+            if outcomes is not None:
+                outcomes = outcomes.rename(
+                    columns={
+                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                        "age_at_event_days": CONCEPT.OUTCOME.EVENT_AGE_DAYS,
+                        "disease_related": CONCEPT.OUTCOME.DISEASE_RELATED,
+                        "external_id": CONCEPT.OUTCOME.ID,
+                        "kf_id": CONCEPT.OUTCOME.TARGET_SERVICE_ID,
+                        "visible": CONCEPT.OUTCOME.VISIBLE,
+                        "vital_status": CONCEPT.OUTCOME.VITAL_STATUS,
+                    }
+                )
+                outcomes = outcomes[outcomes[CONCEPT.OUTCOME.VISIBLE] == True]
+                if not outcomes.empty:
+                    study_merged_df = outer_merge(
+                        study_merged_df,
+                        outcomes,
+                        with_merge_detail_dfs=False,
+                        on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    )
+                    study_all_targets.add(VitalStatus)
 
-            # # biospecimen-diagnoses
-            # biospecimen_diagnoses = study_mapped_df_dict.get("biospecimen-diagnoses")
-            # if biospecimen_diagnoses is not None:
-            #     biospecimen_diagnoses = biospecimen_diagnoses.rename(
-            #         columns={
-            #             "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
-            #             "diagnosis_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-            #             "external_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.ID,
-            #             "kf_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID,
-            #             "visible": CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE,
-            #         }
-            #     )
-            #     biospecimen_diagnoses = biospecimen_diagnoses[
-            #         biospecimen_diagnoses[CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE] == True
-            #     ]
-            #     if not biospecimen_diagnoses.empty:
-            #         study_merged_df = outer_merge(
-            #             study_merged_df,
-            #             biospecimen_diagnoses,
-            #             with_merge_detail_dfs=False,
-            #             on=CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-            #         )
+            # biospecimen-diagnoses
+            biospecimen_diagnoses = study_mapped_df_dict.get("biospecimen-diagnoses")
+            if biospecimen_diagnoses is not None:
+                biospecimen_diagnoses = biospecimen_diagnoses.rename(
+                    columns={
+                        "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
+                        "diagnosis_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
+                        "external_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.ID,
+                        "kf_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID,
+                        "visible": CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE,
+                    }
+                )
+                biospecimen_diagnoses = biospecimen_diagnoses[
+                    biospecimen_diagnoses[CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE] == True
+                ]
+                if not biospecimen_diagnoses.empty:
+                    study_merged_df = outer_merge(
+                        study_merged_df,
+                        biospecimen_diagnoses,
+                        with_merge_detail_dfs=False,
+                        on=CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
+                    )
 
             # biospecimens
             biospecimens = study_mapped_df_dict.get("biospecimens")
@@ -409,19 +409,19 @@ class Ingest:
                 ]
                 if not biospecimens.empty:
                     on = [CONCEPT.PARTICIPANT.TARGET_SERVICE_ID]
-                    # study_all_targets.update(
-                    #     [
-                    #         SequencingCenter,
-                    #         Specimen,
-                    #     ]
-                    # )
+                    study_all_targets.update(
+                        [
+                            SequencingCenter,
+                            Specimen,
+                        ]
+                    )
 
-                    # if (
-                    #     biospecimen_diagnoses is not None
-                    #     and not biospecimen_diagnoses.empty
-                    # ):
-                    #     on.append(CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID)
-                    #     study_all_targets.add(Histopathology)
+                    if (
+                        biospecimen_diagnoses is not None
+                        and not biospecimen_diagnoses.empty
+                    ):
+                        on.append(CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID)
+                        study_all_targets.add(Histopathology)
 
                     study_merged_df = outer_merge(
                         study_merged_df,
