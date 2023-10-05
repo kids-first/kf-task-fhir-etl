@@ -433,17 +433,14 @@ class DRSDocumentReference:
             CONCEPT.STUDY.TARGET_SERVICE_ID,
             CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
         ]
-        # if records.get(CONCEPT.SEQUENCING.TARGET_SERVICE_ID) is not None:
-        #     by.append(CONCEPT.SEQUENCING.TARGET_SERVICE_ID)
+        if records.get(CONCEPT.SEQUENCING.TARGET_SERVICE_ID) is not None:
+            by.append(CONCEPT.SEQUENCING.TARGET_SERVICE_ID)
 
         transfromed_records_list = []
         for names, group in records.groupby(by=by):
             transfromed_record = {
                 CONCEPT.STUDY.TARGET_SERVICE_ID: names[0],
                 CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID: names[1],
-                CONCEPT.SEQUENCING.STRATEGY: group.get(
-                    CONCEPT.SEQUENCING.STRATEGY
-                ).unique()[0],
             }
 
             pb = group.get(
@@ -467,17 +464,17 @@ class DRSDocumentReference:
                 }
             )
 
-            # try:
-            #     transfromed_record.update(
-            #         {
-            #             CONCEPT.SEQUENCING.TARGET_SERVICE_ID: names[2],
-            #             CONCEPT.SEQUENCING.STRATEGY: group.get(
-            #                 CONCEPT.SEQUENCING.STRATEGY
-            #             ).unique()[0],
-            #         }
-            #     )
-            # except:
-            #     pass
+            try:
+                transfromed_record.update(
+                    {
+                        CONCEPT.SEQUENCING.TARGET_SERVICE_ID: names[2],
+                        CONCEPT.SEQUENCING.STRATEGY: group.get(
+                            CONCEPT.SEQUENCING.STRATEGY
+                        ).unique()[0],
+                    }
+                )
+            except:
+                pass
 
             transfromed_records_list.append(transfromed_record)
 
