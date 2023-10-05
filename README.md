@@ -16,7 +16,6 @@ The Kids First FHIR ETL Task Service, built off of the [Kids First Data Ingest L
 
    - Kids First Dataservice DB URL: Contact Kids First DRC DevOps Team.
    - FHIR USERNAME and PASSWORD: The Kids First FHIR ETL uses basic authentication for POST, PUT, PATCH, and DELETE . Contact Kids First DRC DevOps Team.
-   - FHIR Cookie: Follow the instruction described [here](https://github.com/kids-first/kf-api-fhir-service).
 
 3. Clone this repository:
 
@@ -47,7 +46,6 @@ KF_API_FHIR_SERVICE_URL=<PUT-KF-API-FHIR-SERVICE-URL> # e.g., https://kf-api-fhi
 
 FHIR_USERNAME=<PUT-FHIR-USERNAME>
 FHIR_PASSWORD=<PUT-FHIR-USERNAME>
-FHIR_COOKIE=<PUT-FHIR-COOKIE>
 ```
 
 7. Get familiar with required arguments:
@@ -66,7 +64,7 @@ Options:
   -h, --help  Show this message and exit.
 ```
 
-8. Tunnel to the KF Dataservice DB (See also [here](https://github.com/d3b-center/d3b-cli-igor) or contact Kids First DRC DevOps Team):
+(Optional) 8. Tunnel to the KF Dataservice DB (See also [here](https://github.com/d3b-center/d3b-cli-igor) or contact Kids First DRC DevOps Team):
 
 ```
 (venv) igor awslogin
