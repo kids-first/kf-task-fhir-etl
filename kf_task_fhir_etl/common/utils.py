@@ -1,15 +1,14 @@
 import os
 
 from dotenv import find_dotenv, load_dotenv
-from d3b_utils.requests_retry import Session
 from requests import RequestException
+
+from d3b_utils.requests_retry import Session
 
 DOTENV_PATH = find_dotenv()
 if DOTENV_PATH:
     load_dotenv(DOTENV_PATH)
 
-
-FHIR_COOKIE = os.getenv("FHIR_COOKIE")
 FHIR_USERNAME = os.getenv("FHIR_USERNAME")
 FHIR_PASSWORD = os.getenv("FHIR_PASSWORD")
 
@@ -49,9 +48,6 @@ def yield_resources(host, endpoint, filters, show_progress=False):
     headers = {"Content-Type": "application/fhir+json;charset=utf-8"}
     auth = None
 
-    if FHIR_COOKIE:
-        headers["Cookie"] = FHIR_COOKIE
-
     if FHIR_USERNAME and FHIR_PASSWORD:
         auth = (FHIR_USERNAME, FHIR_PASSWORD)
 
@@ -84,6 +80,22 @@ def yield_resources(host, endpoint, filters, show_progress=False):
 
     found = len(found_resource_ids)
     assert expected == found, f"Found {found} resources but expected {expected}"
+
+
+def get_dataservice_entity(host, endpoint, params=None):
+    """Get a dataservice entity."""
+    resp = Session().get(
+        f"{host.rstrip('/')}/{endpoint.lstrip('/')}",
+        params=params,
+        headers={"Content-Type": "application/json"},
+    )
+
+    try:
+        resp.raise_for_status()
+    except:
+        raise RequestException(f"{resp.text}")
+
+    return resp.json()
 
 
 def yield_resource_ids(host, endpoint, filters, show_progress=False):
