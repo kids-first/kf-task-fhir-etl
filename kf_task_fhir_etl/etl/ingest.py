@@ -22,9 +22,11 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Phenotype,
     VitalStatus,
     SequencingCenter,
-    Specimen,
+    ParentalSpecimen,
+    ChildrenSpecimen,
     Histopathology,
     DRSDocumentReference,
+    DRSDocumentReferenceIndex,
 )
 from kf_task_fhir_etl.target_api_plugins.kf_api_fhir_service import all_targets
 from kf_lib_data_ingest.config import DEFAULT_KEY
@@ -118,7 +120,6 @@ class Ingest:
                     df = records
                 else:
                     df = pd.DataFrame.from_dict(records, orient="index")
-                df = df.drop(columns=["uuid", "created_at", "modified_at"])
                 mapped_df_dict.setdefault(kf_study_id, {})[endpoint] = df
                 logging.info(f"    📁 {endpoint} {df.shape}")
 
@@ -144,23 +145,23 @@ class Ingest:
             # studies
             studies = study_mapped_df_dict.get("studies")
             if studies is not None:
-                studies = studies.rename(
-                    columns={
-                        "investigator_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
-                        "attribution": CONCEPT.STUDY.ATTRIBUTION,
-                        "data_access_authority": CONCEPT.STUDY.AUTHORITY,
-                        "domain": "STUDY|DOMAIN",
-                        "external_id": CONCEPT.STUDY.ID,
-                        "kf_id": CONCEPT.STUDY.TARGET_SERVICE_ID,
-                        "name": CONCEPT.STUDY.NAME,
-                        "program": "STUDY|PROGRAM",
-                        "release_status": CONCEPT.STUDY.RELEASE_STATUS,
-                        "short_code": "STUDY|SHORT_CODE",
-                        "short_name": CONCEPT.STUDY.SHORT_NAME,
-                        "version": CONCEPT.STUDY.VERSION,
-                        "visible": CONCEPT.STUDY.VISIBLE,
-                    }
-                )
+                columns = {
+                    "investigator_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
+                    "attribution": CONCEPT.STUDY.ATTRIBUTION,
+                    "data_access_authority": CONCEPT.STUDY.AUTHORITY,
+                    "domain": "STUDY|DOMAIN",
+                    "external_id": CONCEPT.STUDY.ID,
+                    "kf_id": CONCEPT.STUDY.TARGET_SERVICE_ID,
+                    "name": CONCEPT.STUDY.NAME,
+                    "program": "STUDY|PROGRAM",
+                    "release_status": CONCEPT.STUDY.RELEASE_STATUS,
+                    "short_code": "STUDY|SHORT_CODE",
+                    "short_name": CONCEPT.STUDY.SHORT_NAME,
+                    "version": CONCEPT.STUDY.VERSION,
+                    "visible": CONCEPT.STUDY.VISIBLE,
+                }
+                studies = studies[list(columns.keys())]
+                studies = studies.rename(columns=columns)
                 studies = studies[studies[CONCEPT.STUDY.VISIBLE] == True]
                 if not studies.empty:
                     study_all_targets.add(ResearchStudy)
@@ -168,15 +169,15 @@ class Ingest:
             # investigators
             investigators = study_mapped_df_dict.get("investigators")
             if investigators is not None:
-                investigators = investigators.rename(
-                    columns={
-                        "external_id": CONCEPT.INVESTIGATOR.ID,
-                        "institution": CONCEPT.INVESTIGATOR.INSTITUTION,
-                        "kf_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
-                        "name": CONCEPT.INVESTIGATOR.NAME,
-                        "visible": CONCEPT.INVESTIGATOR.VISIBLE,
-                    }
-                )
+                columns = {
+                    "external_id": CONCEPT.INVESTIGATOR.ID,
+                    "institution": CONCEPT.INVESTIGATOR.INSTITUTION,
+                    "kf_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
+                    "name": CONCEPT.INVESTIGATOR.NAME,
+                    "visible": CONCEPT.INVESTIGATOR.VISIBLE,
+                }
+                investigators = investigators[list(columns.keys())]
+                investigators = investigators.rename(columns=columns)
                 investigators = investigators[
                     investigators[CONCEPT.INVESTIGATOR.VISIBLE] == True
                 ]
@@ -198,22 +199,22 @@ class Ingest:
             # participants
             participants = study_mapped_df_dict.get("participants")
             if participants is not None:
-                participants = participants.rename(
-                    columns={
-                        "family_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
-                        "study_id": CONCEPT.STUDY.TARGET_SERVICE_ID,
-                        "affected_status": CONCEPT.PARTICIPANT.IS_AFFECTED_UNDER_STUDY,
-                        "diagnosis_category": CONCEPT.STUDY.CATEGORY,
-                        "ethnicity": CONCEPT.PARTICIPANT.ETHNICITY,
-                        "external_id": CONCEPT.PARTICIPANT.ID,
-                        "gender": CONCEPT.PARTICIPANT.GENDER,
-                        "is_proband": CONCEPT.PARTICIPANT.IS_PROBAND,
-                        "kf_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                        "race": CONCEPT.PARTICIPANT.RACE,
-                        "species": CONCEPT.PARTICIPANT.SPECIES,
-                        "visible": CONCEPT.PARTICIPANT.VISIBLE,
-                    }
-                )
+                columns = {
+                    "family_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
+                    "study_id": CONCEPT.STUDY.TARGET_SERVICE_ID,
+                    "affected_status": CONCEPT.PARTICIPANT.IS_AFFECTED_UNDER_STUDY,
+                    "diagnosis_category": CONCEPT.STUDY.CATEGORY,
+                    "ethnicity": CONCEPT.PARTICIPANT.ETHNICITY,
+                    "external_id": CONCEPT.PARTICIPANT.ID,
+                    "gender": CONCEPT.PARTICIPANT.GENDER,
+                    "is_proband": CONCEPT.PARTICIPANT.IS_PROBAND,
+                    "kf_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    "race": CONCEPT.PARTICIPANT.RACE,
+                    "species": CONCEPT.PARTICIPANT.SPECIES,
+                    "visible": CONCEPT.PARTICIPANT.VISIBLE,
+                }
+                participants = participants[list(columns.keys())]
+                participants = participants.rename(columns=columns)
                 participants = participants[
                     participants[CONCEPT.PARTICIPANT.VISIBLE] == True
                 ]
@@ -232,16 +233,38 @@ class Ingest:
                         ]
                     )
 
+            # family-relationships
+            family_relationships = study_mapped_df_dict.get("family-relationships")
+            if family_relationships is not None:
+                columns = {
+                    "participant1_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID,
+                    "participant2_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID,
+                    "external_id": CONCEPT.FAMILY_RELATIONSHIP.ID,
+                    "kf_id": CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID,
+                    "participant1_to_participant2_relation": CONCEPT.FAMILY_RELATIONSHIP.RELATION_FROM_1_TO_2,
+                    "visible": CONCEPT.FAMILY_RELATIONSHIP.VISIBLE,
+                }
+                family_relationships = family_relationships[list(columns.keys())]
+                family_relationships = family_relationships.rename(columns=columns)
+                family_relationships = family_relationships[
+                    family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
+                ]
+                if not family_relationships.empty:
+                    merged_df_dict[kf_study_id]["family_relationship"] = clean_up_df(
+                        family_relationships
+                    )
+                    study_all_targets.add(FamilyRelationship)
+
             # families
             families = study_mapped_df_dict.get("families")
             if families is not None:
-                families = families.rename(
-                    columns={
-                        "external_id": CONCEPT.FAMILY.ID,
-                        "kf_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.FAMILY.VISIBLE,
-                    }
-                )
+                columns = {
+                    "external_id": CONCEPT.FAMILY.ID,
+                    "kf_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
+                    "visible": CONCEPT.FAMILY.VISIBLE,
+                }
+                families = families[list(columns.keys())]
+                families = families.rename(columns=columns)
                 families = families[families[CONCEPT.FAMILY.VISIBLE] == True]
                 if not families.empty:
                     study_merged_df = outer_merge(
@@ -252,48 +275,26 @@ class Ingest:
                     )
                     study_all_targets.add(Family)
 
-            # family-relationships
-            family_relationships = study_mapped_df_dict.get("family-relationships")
-            if family_relationships is not None:
-                family_relationships = family_relationships.rename(
-                    columns={
-                        "participant1_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID,
-                        "participant2_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID,
-                        "external_id": CONCEPT.FAMILY_RELATIONSHIP.ID,
-                        "kf_id": CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID,
-                        "participant1_to_participant2_relation": CONCEPT.FAMILY_RELATIONSHIP.RELATION_FROM_1_TO_2,
-                        "visible": CONCEPT.FAMILY_RELATIONSHIP.VISIBLE,
-                    }
-                )
-                family_relationships = family_relationships[
-                    family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
-                ]
-                if not family_relationships.empty:
-                    merged_df_dict[kf_study_id]["family_relationship"] = clean_up_df(
-                        family_relationships
-                    )
-                    study_all_targets.add(FamilyRelationship)
-
             # diagnoses
             diagnoses = study_mapped_df_dict.get("diagnoses")
             if diagnoses is not None:
-                diagnoses = diagnoses.rename(
-                    columns={
-                        "external_id": CONCEPT.DIAGNOSIS.ID,
-                        "source_text_diagnosis": CONCEPT.DIAGNOSIS.NAME,
-                        "diagnosis_category": CONCEPT.DIAGNOSIS.CATEGORY,
-                        "source_text_tumor_location": CONCEPT.DIAGNOSIS.TUMOR_LOCATION,
-                        "age_at_event_days": CONCEPT.DIAGNOSIS.EVENT_AGE_DAYS,
-                        "mondo_id_diagnosis": CONCEPT.DIAGNOSIS.MONDO_ID,
-                        "icd_id_diagnosis": CONCEPT.DIAGNOSIS.ICD_ID,
-                        "uberon_id_tumor_location": CONCEPT.DIAGNOSIS.UBERON_TUMOR_LOCATION_ID,
-                        "ncit_id_diagnosis": CONCEPT.DIAGNOSIS.NCIT_ID,
-                        "spatial_descriptor": CONCEPT.DIAGNOSIS.SPATIAL_DESCRIPTOR,
-                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                        "kf_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.DIAGNOSIS.VISIBLE,
-                    }
-                )
+                columns = {
+                    "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    "age_at_event_days": CONCEPT.DIAGNOSIS.EVENT_AGE_DAYS,
+                    "diagnosis_category": CONCEPT.DIAGNOSIS.CATEGORY,
+                    "external_id": CONCEPT.DIAGNOSIS.ID,
+                    "icd_id_diagnosis": CONCEPT.DIAGNOSIS.ICD_ID,
+                    "kf_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
+                    "mondo_id_diagnosis": CONCEPT.DIAGNOSIS.MONDO_ID,
+                    "ncit_id_diagnosis": CONCEPT.DIAGNOSIS.NCIT_ID,
+                    "source_text_diagnosis": CONCEPT.DIAGNOSIS.NAME,
+                    "source_text_tumor_location": CONCEPT.DIAGNOSIS.TUMOR_LOCATION,
+                    "uberon_id_tumor_location": CONCEPT.DIAGNOSIS.UBERON_TUMOR_LOCATION_ID,
+                    "spatial_descriptor": CONCEPT.DIAGNOSIS.SPATIAL_DESCRIPTOR,
+                    "visible": CONCEPT.DIAGNOSIS.VISIBLE,
+                }
+                diagnoses = diagnoses[list(columns.keys())]
+                diagnoses = diagnoses.rename(columns=columns)
                 diagnoses = diagnoses[diagnoses[CONCEPT.DIAGNOSIS.VISIBLE] == True]
                 if not diagnoses.empty:
                     study_merged_df = outer_merge(
@@ -307,19 +308,19 @@ class Ingest:
             # phenotypes
             phenotypes = study_mapped_df_dict.get("phenotypes")
             if phenotypes is not None:
-                phenotypes = phenotypes.rename(
-                    columns={
-                        "external_id": CONCEPT.PHENOTYPE.ID,
-                        "source_text_phenotype": CONCEPT.PHENOTYPE.NAME,
-                        "hpo_id_phenotype": CONCEPT.PHENOTYPE.HPO_ID,
-                        "snomed_id_phenotype": CONCEPT.PHENOTYPE.SNOMED_ID,
-                        "observed": CONCEPT.PHENOTYPE.OBSERVED,
-                        "age_at_event_days": CONCEPT.PHENOTYPE.EVENT_AGE_DAYS,
-                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                        "kf_id": CONCEPT.PHENOTYPE.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.PHENOTYPE.VISIBLE,
-                    }
-                )
+                columns = {
+                    "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    "age_at_event_days": CONCEPT.PHENOTYPE.EVENT_AGE_DAYS,
+                    "external_id": CONCEPT.PHENOTYPE.ID,
+                    "hpo_id_phenotype": CONCEPT.PHENOTYPE.HPO_ID,
+                    "kf_id": CONCEPT.PHENOTYPE.TARGET_SERVICE_ID,
+                    "observed": CONCEPT.PHENOTYPE.OBSERVED,
+                    "snomed_id_phenotype": CONCEPT.PHENOTYPE.SNOMED_ID,
+                    "source_text_phenotype": CONCEPT.PHENOTYPE.NAME,
+                    "visible": CONCEPT.PHENOTYPE.VISIBLE,
+                }
+                phenotypes = phenotypes[list(columns.keys())]
+                phenotypes = phenotypes.rename(columns=columns)
                 phenotypes = phenotypes[phenotypes[CONCEPT.PHENOTYPE.VISIBLE] == True]
                 if not phenotypes.empty:
                     study_merged_df = outer_merge(
@@ -333,17 +334,17 @@ class Ingest:
             # outcomes
             outcomes = study_mapped_df_dict.get("outcomes")
             if outcomes is not None:
-                outcomes = outcomes.rename(
-                    columns={
-                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                        "age_at_event_days": CONCEPT.OUTCOME.EVENT_AGE_DAYS,
-                        "disease_related": CONCEPT.OUTCOME.DISEASE_RELATED,
-                        "external_id": CONCEPT.OUTCOME.ID,
-                        "kf_id": CONCEPT.OUTCOME.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.OUTCOME.VISIBLE,
-                        "vital_status": CONCEPT.OUTCOME.VITAL_STATUS,
-                    }
-                )
+                columns = {
+                    "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    "age_at_event_days": CONCEPT.OUTCOME.EVENT_AGE_DAYS,
+                    "disease_related": CONCEPT.OUTCOME.DISEASE_RELATED,
+                    "external_id": CONCEPT.OUTCOME.ID,
+                    "kf_id": CONCEPT.OUTCOME.TARGET_SERVICE_ID,
+                    "visible": CONCEPT.OUTCOME.VISIBLE,
+                    "vital_status": CONCEPT.OUTCOME.VITAL_STATUS,
+                }
+                outcomes = outcomes[list(columns.keys())]
+                outcomes = outcomes.rename(columns=columns)
                 outcomes = outcomes[outcomes[CONCEPT.OUTCOME.VISIBLE] == True]
                 if not outcomes.empty:
                     study_merged_df = outer_merge(
@@ -357,15 +358,15 @@ class Ingest:
             # biospecimen-diagnoses
             biospecimen_diagnoses = study_mapped_df_dict.get("biospecimen-diagnoses")
             if biospecimen_diagnoses is not None:
-                biospecimen_diagnoses = biospecimen_diagnoses.rename(
-                    columns={
-                        "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
-                        "diagnosis_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-                        "external_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.ID,
-                        "kf_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE,
-                    }
-                )
+                columns = {
+                    "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
+                    "diagnosis_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
+                    "external_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.ID,
+                    "kf_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID,
+                    "visible": CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE,
+                }
+                biospecimen_diagnoses = biospecimen_diagnoses[list(columns.keys())]
+                biospecimen_diagnoses = biospecimen_diagnoses.rename(columns=columns)
                 biospecimen_diagnoses = biospecimen_diagnoses[
                     biospecimen_diagnoses[CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE] == True
                 ]
@@ -380,30 +381,30 @@ class Ingest:
             # biospecimens
             biospecimens = study_mapped_df_dict.get("biospecimens")
             if biospecimens is not None:
-                biospecimens = biospecimens.rename(
-                    columns={
-                        "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                        "sequencing_center_id": CONCEPT.SEQUENCING.CENTER.TARGET_SERVICE_ID,
-                        "age_at_event_days": CONCEPT.BIOSPECIMEN.EVENT_AGE_DAYS,
-                        "analyte_type": CONCEPT.BIOSPECIMEN.ANALYTE,
-                        "composition": CONCEPT.BIOSPECIMEN.COMPOSITION,
-                        "consent_type": CONCEPT.BIOSPECIMEN.CONSENT_SHORT_NAME,
-                        "dbgap_consent_code": CONCEPT.BIOSPECIMEN.DBGAP_STYLE_CONSENT_CODE,
-                        "external_aliquot_id": CONCEPT.BIOSPECIMEN.ID,
-                        "external_sample_id": CONCEPT.BIOSPECIMEN_GROUP.ID,
-                        "kf_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
-                        "method_of_smaple_procurement": CONCEPT.BIOSPECIMEN.SAMPLE_PROCUREMENT,
-                        "ncit_id_anatomical_site": CONCEPT.BIOSPECIMEN.NCIT_ANATOMY_SITE_ID,
-                        "ncit_id_tissue_type": CONCEPT.BIOSPECIMEN.NCIT_TISSUE_TYPE_ID,
-                        "source_text_anatomical_site": CONCEPT.BIOSPECIMEN.ANATOMY_SITE,
-                        "source_text_tissue_type": CONCEPT.BIOSPECIMEN.TISSUE_TYPE,
-                        "source_text_tumor_descriptor": CONCEPT.BIOSPECIMEN.TUMOR_DESCRIPTOR,
-                        "spatial_descriptor": CONCEPT.BIOSPECIMEN.SPATIAL_DESCRIPTOR,
-                        "uberon_id_anatomical_site": CONCEPT.BIOSPECIMEN.UBERON_ANATOMY_SITE_ID,
-                        "visible": CONCEPT.BIOSPECIMEN.VISIBLE,
-                        "volume_ul": CONCEPT.BIOSPECIMEN.VOLUME_UL,
-                    }
-                )
+                columns = {
+                    "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+                    "sequencing_center_id": CONCEPT.SEQUENCING.CENTER.TARGET_SERVICE_ID,
+                    "age_at_event_days": CONCEPT.BIOSPECIMEN.EVENT_AGE_DAYS,
+                    "analyte_type": CONCEPT.BIOSPECIMEN.ANALYTE,
+                    "composition": CONCEPT.BIOSPECIMEN.COMPOSITION,
+                    "consent_type": CONCEPT.BIOSPECIMEN.CONSENT_SHORT_NAME,
+                    "dbgap_consent_code": CONCEPT.BIOSPECIMEN.DBGAP_STYLE_CONSENT_CODE,
+                    "external_aliquot_id": CONCEPT.BIOSPECIMEN.ID,
+                    "external_sample_id": CONCEPT.BIOSPECIMEN_GROUP.ID,
+                    "kf_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
+                    "method_of_sample_procurement": CONCEPT.BIOSPECIMEN.SAMPLE_PROCUREMENT,
+                    "ncit_id_anatomical_site": CONCEPT.BIOSPECIMEN.NCIT_ANATOMY_SITE_ID,
+                    "ncit_id_tissue_type": CONCEPT.BIOSPECIMEN.NCIT_TISSUE_TYPE_ID,
+                    "source_text_anatomical_site": CONCEPT.BIOSPECIMEN.ANATOMY_SITE,
+                    "source_text_tissue_type": CONCEPT.BIOSPECIMEN.TISSUE_TYPE,
+                    "source_text_tumor_descriptor": CONCEPT.BIOSPECIMEN.TUMOR_DESCRIPTOR,
+                    "spatial_descriptor": CONCEPT.BIOSPECIMEN.SPATIAL_DESCRIPTOR,
+                    "uberon_id_anatomical_site": CONCEPT.BIOSPECIMEN.UBERON_ANATOMY_SITE_ID,
+                    "visible": CONCEPT.BIOSPECIMEN.VISIBLE,
+                    "volume_ul": CONCEPT.BIOSPECIMEN.VOLUME_UL,
+                }
+                biospecimens = biospecimens[list(columns.keys())]
+                biospecimens = biospecimens.rename(columns=columns)
                 biospecimens = biospecimens[
                     biospecimens[CONCEPT.BIOSPECIMEN.VISIBLE] == True
                 ]
@@ -412,7 +413,8 @@ class Ingest:
                     study_all_targets.update(
                         [
                             SequencingCenter,
-                            Specimen,
+                            ParentalSpecimen,
+                            ChildrenSpecimen,
                         ]
                     )
 
@@ -435,14 +437,18 @@ class Ingest:
                 "biospecimen-genomic-files"
             )
             if biospecimen_genomic_files is not None:
+                columns = {
+                    "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
+                    "genomic_file_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
+                    "external_id": CONCEPT.BIOSPECIMEN_GENOMIC_FILE.ID,
+                    "kf_id": CONCEPT.BIOSPECIMEN_GENOMIC_FILE.TARGET_SERVICE_ID,
+                    "visible": CONCEPT.BIOSPECIMEN_GENOMIC_FILE.VISIBLE,
+                }
+                biospecimen_genomic_files = biospecimen_genomic_files[
+                    list(columns.keys())
+                ]
                 biospecimen_genomic_files = biospecimen_genomic_files.rename(
-                    columns={
-                        "genomic_file_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-                        "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
-                        "kf_id": CONCEPT.BIOSPECIMEN_GENOMIC_FILE.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.BIOSPECIMEN_GENOMIC_FILE.VISIBLE,
-                        "external_id": CONCEPT.BIOSPECIMEN_GENOMIC_FILE.ID,
-                    }
+                    columns=columns
                 )
                 biospecimen_genomic_files = biospecimen_genomic_files[
                     biospecimen_genomic_files[CONCEPT.BIOSPECIMEN_GENOMIC_FILE.VISIBLE]
@@ -459,20 +465,20 @@ class Ingest:
             # genomic-files
             genomic_files = study_mapped_df_dict.get("genomic-files")
             if genomic_files is not None:
-                genomic_files = genomic_files.rename(
-                    columns={
-                        "latest_did": "GENOMIC_FILE|LATEST_DID",
-                        "external_id": CONCEPT.GENOMIC_FILE.ID,
-                        "data_type": CONCEPT.GENOMIC_FILE.DATA_TYPE,
-                        "file_format": CONCEPT.GENOMIC_FILE.FILE_FORMAT,
-                        "is_harmonized": CONCEPT.GENOMIC_FILE.HARMONIZED,
-                        "reference_genome": CONCEPT.GENOMIC_FILE.REFERENCE_GENOME,
-                        "controlled_access": CONCEPT.GENOMIC_FILE.CONTROLLED_ACCESS,
-                        "availability": CONCEPT.GENOMIC_FILE.AVAILABILITY,
-                        "kf_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.GENOMIC_FILE.VISIBLE,
-                    }
-                )
+                columns = {
+                    "availability": CONCEPT.GENOMIC_FILE.AVAILABILITY,
+                    "controlled_access": CONCEPT.GENOMIC_FILE.CONTROLLED_ACCESS,
+                    "data_type": CONCEPT.GENOMIC_FILE.DATA_TYPE,
+                    "external_id": CONCEPT.GENOMIC_FILE.ID,
+                    "file_format": CONCEPT.GENOMIC_FILE.FILE_FORMAT,
+                    "is_harmonized": CONCEPT.GENOMIC_FILE.HARMONIZED,
+                    "kf_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
+                    "latest_did": "GENOMIC_FILE|LATEST_DID",
+                    "reference_genome": CONCEPT.GENOMIC_FILE.REFERENCE_GENOME,
+                    "visible": CONCEPT.GENOMIC_FILE.VISIBLE,
+                }
+                genomic_files = genomic_files[list(columns.keys())]
+                genomic_files = genomic_files.rename(columns=columns)
                 genomic_files = genomic_files[
                     genomic_files[CONCEPT.GENOMIC_FILE.VISIBLE] == True
                 ]
@@ -483,21 +489,31 @@ class Ingest:
                         with_merge_detail_dfs=False,
                         on=CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
                     )
-                    study_all_targets.add(DRSDocumentReference)
+                    study_all_targets.update(
+                        [
+                            DRSDocumentReference,
+                            # Below is an intermediate solution for index files
+                            DRSDocumentReferenceIndex,
+                        ]
+                    )
 
             # sequencing-experiment-genomic-files
             sequencing_experiment_genomic_files = study_mapped_df_dict.get(
                 "sequencing-experiment-genomic-files"
             )
             if sequencing_experiment_genomic_files is not None:
-                sequencing_experiment_genomic_files = sequencing_experiment_genomic_files.rename(
-                    columns={
-                        "external_id": CONCEPT.SEQUENCING_GENOMIC_FILE.ID,
-                        "sequencing_experiment_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
-                        "genomic_file_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-                        "kf_id": CONCEPT.SEQUENCING_GENOMIC_FILE.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.SEQUENCING_GENOMIC_FILE.VISIBLE,
-                    }
+                columns = {
+                    "sequencing_experiment_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
+                    "genomic_file_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
+                    "external_id": CONCEPT.SEQUENCING_GENOMIC_FILE.ID,
+                    "kf_id": CONCEPT.SEQUENCING_GENOMIC_FILE.TARGET_SERVICE_ID,
+                    "visible": CONCEPT.SEQUENCING_GENOMIC_FILE.VISIBLE,
+                }
+                sequencing_experiment_genomic_files = (
+                    sequencing_experiment_genomic_files[list(columns.keys())]
+                )
+                sequencing_experiment_genomic_files = (
+                    sequencing_experiment_genomic_files.rename(columns=columns)
                 )
                 sequencing_experiment_genomic_files = (
                     sequencing_experiment_genomic_files[
@@ -521,14 +537,14 @@ class Ingest:
                 sequencing_experiment_genomic_files is not None
                 and sequencing_experiments is not None
             ):
-                sequencing_experiments = sequencing_experiments.rename(
-                    columns={
-                        "experiment_strategy": CONCEPT.SEQUENCING.STRATEGY,
-                        "external_id": CONCEPT.SEQUENCING.ID,
-                        "kf_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
-                        "visible": CONCEPT.SEQUENCING.VISIBLE,
-                    }
-                )
+                columns = {
+                    "experiment_strategy": CONCEPT.SEQUENCING.STRATEGY,
+                    "external_id": CONCEPT.SEQUENCING.ID,
+                    "kf_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
+                    "visible": CONCEPT.SEQUENCING.VISIBLE,
+                }
+                sequencing_experiments = sequencing_experiments[list(columns.keys())]
+                sequencing_experiments = sequencing_experiments.rename(columns=columns)
                 sequencing_experiments = sequencing_experiments[
                     sequencing_experiments[CONCEPT.SEQUENCING.VISIBLE] == True
                 ]
@@ -540,6 +556,7 @@ class Ingest:
                         on=CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
                     )
 
+            # Clean up merged data frame
             merged_df_dict[kf_study_id][DEFAULT_KEY] = clean_up_df(study_merged_df)
 
             self.all_targets[kf_study_id] = [

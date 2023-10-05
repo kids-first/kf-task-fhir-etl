@@ -18,9 +18,11 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Phenotype,
     VitalStatus,
     SequencingCenter,
-    Specimen,
+    ParentalSpecimen,
+    ChildrenSpecimen,
     Histopathology,
     DRSDocumentReference,
+    DRSDocumentReferenceIndex,
 )
 
 LOADER_VERSION = 2
@@ -29,7 +31,6 @@ DOTENV_PATH = find_dotenv()
 if DOTENV_PATH:
     load_dotenv(DOTENV_PATH)
 
-FHIR_COOKIE = os.getenv("FHIR_COOKIE")
 FHIR_USERNAME = os.getenv("FHIR_USERNAME")
 FHIR_PASSWORD = os.getenv("FHIR_PASSWORD")
 
@@ -65,11 +66,11 @@ def submit(entity_class, host, body):
     :return: The target entity ID that the service says was created or updated
     :rtype: str
     """
-    headers = {
-        "Content-Type": "application/fhir+json;charset=utf-8",
-        "Cookie": FHIR_COOKIE,
-    }
-    auth = (FHIR_USERNAME, FHIR_PASSWORD)
+    headers = {"Content-Type": "application/fhir+json;charset=utf-8"}
+    auth = None
+
+    if FHIR_USERNAME and FHIR_PASSWORD:
+        auth = (FHIR_USERNAME, FHIR_PASSWORD)
 
     resp = None
     api_path = entity_class.api_path
@@ -108,9 +109,11 @@ Disease.submit = classmethod(submit)
 Phenotype.submit = classmethod(submit)
 VitalStatus.submit = classmethod(submit)
 SequencingCenter.submit = classmethod(submit)
-Specimen.submit = classmethod(submit)
+ParentalSpecimen.submit = classmethod(submit)
+ChildrenSpecimen.submit = classmethod(submit)
 Histopathology.submit = classmethod(submit)
 DRSDocumentReference.submit = classmethod(submit)
+DRSDocumentReferenceIndex.submit = classmethod(submit)
 
 all_targets = [
     Practitioner,
@@ -126,7 +129,9 @@ all_targets = [
     Phenotype,
     VitalStatus,
     SequencingCenter,
-    Specimen,
+    ParentalSpecimen,
+    ChildrenSpecimen,
     Histopathology,
     DRSDocumentReference,
+    DRSDocumentReferenceIndex,
 ]

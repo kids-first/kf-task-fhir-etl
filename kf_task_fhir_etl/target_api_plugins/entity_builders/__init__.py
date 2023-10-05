@@ -31,10 +31,20 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders.vital_status import (
 from kf_task_fhir_etl.target_api_plugins.entity_builders.sequencing_center import (
     SequencingCenter,
 )
-from kf_task_fhir_etl.target_api_plugins.entity_builders.specimen import Specimen
+
+# from kf_task_fhir_etl.target_api_plugins.entity_builders.specimen import Specimen
+from kf_task_fhir_etl.target_api_plugins.entity_builders.parental_specimen import (
+    ParentalSpecimen,
+)
+from kf_task_fhir_etl.target_api_plugins.entity_builders.children_specimen import (
+    ChildrenSpecimen,
+)
 from kf_task_fhir_etl.target_api_plugins.entity_builders.histopathology import (
     Histopathology,
 )
 from kf_task_fhir_etl.target_api_plugins.entity_builders.drs_document_reference import (
     DRSDocumentReference,
+)
+from kf_task_fhir_etl.target_api_plugins.entity_builders.drs_document_reference_index import (
+    DRSDocumentReferenceIndex,
 )

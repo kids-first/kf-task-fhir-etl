@@ -48,7 +48,10 @@ class Family:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
-        return {"identifier": not_none(record[CONCEPT.FAMILY.TARGET_SERVICE_ID])}
+        return {
+            "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
+            "identifier": not_none(record[CONCEPT.FAMILY.TARGET_SERVICE_ID]),
+        }
 
     @classmethod
     def query_target_ids(cls, host, key_components):
@@ -109,7 +112,11 @@ class Family:
             try:
                 patient_id = not_none(
                     get_target_id_from_record(
-                        Patient, {CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id}
+                        Patient,
+                        {
+                            CONCEPT.STUDY.TARGET_SERVICE_ID: study_id,
+                            CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id,
+                        },
                     )
                 )
                 member.append(

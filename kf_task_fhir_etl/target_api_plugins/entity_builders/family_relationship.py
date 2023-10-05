@@ -169,6 +169,11 @@ code_coding = {
         "code": "EXT",
         "display": "extended family member",
     },
+    "Maternal Great Aunt (Mother's paternal aunt)": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+        "code": "EXT",
+        "display": "extended family member",
+    },
     "Maternal Great Grandmother": {
         "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
         "code": "MGGRMTH",
@@ -274,6 +279,11 @@ code_coding = {
         "code": "SPS",
         "display": "spouse",
     },
+    "Twin": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+        "code": "TWIN",
+        "display": "twin",
+    },
     constants.RELATIONSHIP.TWIN_BROTHER: {
         "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
         "code": "TWINBRO",
@@ -315,13 +325,15 @@ class FamilyRelationship:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
+        study_id = record[CONCEPT.PROJECT.ID]
         assert not_none(
             get_target_id_from_record(
                 Patient,
                 {
+                    CONCEPT.STUDY.TARGET_SERVICE_ID: study_id,
                     CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: record[
                         CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID
-                    ]
+                    ],
                 },
             )
         )
@@ -329,17 +341,20 @@ class FamilyRelationship:
             get_target_id_from_record(
                 Patient,
                 {
+                    CONCEPT.STUDY.TARGET_SERVICE_ID: study_id,
                     CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: record[
                         CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID
-                    ]
+                    ],
                 },
             )
         )
+        assert not_none(record[CONCEPT.FAMILY_RELATIONSHIP.RELATION_FROM_1_TO_2])
 
         return {
+            "_tag": study_id,
             "identifier": not_none(
                 record[CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID]
-            )
+            ),
         }
 
     @classmethod
@@ -360,7 +375,7 @@ class FamilyRelationship:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [
-                    "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/family-relationship"
+                    "https://ncpi-fhir.github.io/ncpi-fhir-ig/StructureDefinition/family-relationship"
                 ],
                 "tag": [
                     {
@@ -400,18 +415,22 @@ class FamilyRelationship:
             )
 
         # subject
-        subject_id = not_none(
-            get_target_id_from_record(
-                Patient, {CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant1_id}
-            )
+        subject_id = get_target_id_from_record(
+            Patient,
+            {
+                CONCEPT.STUDY.TARGET_SERVICE_ID: study_id,
+                CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant1_id,
+            },
         )
         entity["subject"] = {"reference": f"{Patient.api_path}/{subject_id}"}
 
         # focus
-        focus_id = not_none(
-            get_target_id_from_record(
-                Patient, {CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant2_id}
-            )
+        focus_id = get_target_id_from_record(
+            Patient,
+            {
+                CONCEPT.STUDY.TARGET_SERVICE_ID: study_id,
+                CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant2_id,
+            },
         )
         entity.setdefault("focus", []).append(
             {"reference": f"{Patient.api_path}/{focus_id}"}
