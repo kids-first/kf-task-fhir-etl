@@ -41,6 +41,18 @@ if DOTENV_PATH:
     load_dotenv(DOTENV_PATH)
 
 
+def elapsed_time_hms(start_time):
+    """Get time elapsed since start_time in hh:mm:ss str format
+
+    :param start_time: The starting time from which to calc elapsed time
+    :type start_time: datetime.datetime obj
+    :returns: a time string formatted as hh:mm:ss
+    :rtype: str
+    """
+    elapsed = time.time() - start_time
+    return time.strftime("%H:%M:%S", time.gmtime(elapsed))
+
+
 class Ingest:
     def __init__(self, kf_study_ids):
         """A constructor method.
@@ -591,6 +603,7 @@ class Ingest:
 
             logging.info(f"  ✅ Loaded {kf_study_id}")
 
+
     def run(self):
         """Runs an ingest pipeline."""
         logging.info(f"🚚 Start ingesting {self.kf_study_ids}")
@@ -605,13 +618,7 @@ class Ingest:
         # Load
         self.load(merged_df_dict)
 
-        end = time.time()
-
-        timedelta = end - start
-        m, s = divmod(timedelta, 60)
-        h, m = divmod(m, 60)
-
         logging.info(
-            f"✅ Finished ingesting {self.kf_study_ids}; ",
-            f"Time elapsed: {h} hours {m} minutes {s} seconds.",
+            f"✅ Finished ingesting {self.kf_study_ids}; "
+            f"Time elapsed: {elapsed_time_hms(start)}",
         )
