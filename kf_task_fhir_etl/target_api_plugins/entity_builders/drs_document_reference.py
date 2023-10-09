@@ -505,7 +505,7 @@ class DRSDocumentReference:
         genomic_file = get_dataservice_entity(
             base_url, f"/genomic-files/{genomic_file_id}"
         )["results"]
-        acl_list = genomic_file.get("acl")
+        acl_list = genomic_file.get("authz") or genomic_file.get("acl")
         controlled_access = genomic_file.get("controlled_access")
         data_type = genomic_file.get("data_type")
         file_format = genomic_file.get("file_format")
