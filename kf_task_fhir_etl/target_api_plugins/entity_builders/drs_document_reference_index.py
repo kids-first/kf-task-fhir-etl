@@ -10,6 +10,7 @@ import pandas as pd
 from kf_lib_data_ingest.common import constants
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_task_fhir_etl.common.constants import MISSING_DATA_VALUES
+from kf_task_fhir_etl.target_api_plugins.common import _set_authorization
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Patient,
     DRSDocumentReference,
@@ -311,7 +312,7 @@ class DRSDocumentReferenceIndex:
         genomic_file = get_dataservice_entity(
             base_url, f"/genomic-files/{genomic_file_id}"
         )["results"]
-        acl_list = genomic_file.get("acl")
+        acl_list = _set_authorization(genomic_file) 
         controlled_access = genomic_file.get("controlled_access")
         data_type = genomic_file.get("data_type")
         file_format = genomic_file.get("file_format")
