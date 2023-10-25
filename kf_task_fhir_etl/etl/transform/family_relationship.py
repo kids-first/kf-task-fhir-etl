@@ -1,8 +1,15 @@
 
+import logging
+
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_lib_data_ingest.common.pandas_utils import outer_merge
 
+logger = logging.getLogger(__name__)
+
 def build_df(dataservice_entity_dfs_dict):
+    logger.info(
+        f"🏭 Transforming family relationships ..."
+    )
     family_relationships = dataservice_entity_dfs_dict.get("family-relationships")
 
     if family_relationships is not None:

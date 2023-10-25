@@ -1,7 +1,13 @@
 
+import logging
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 
+logger = logging.getLogger(__name__)
+
 def build_df(dataservice_entity_dfs_dict):
+    logger.info(
+        f"🏭 Transforming studies ..."
+    )
     studies = dataservice_entity_dfs_dict.get("studies")
     if studies is not None:
         columns = {

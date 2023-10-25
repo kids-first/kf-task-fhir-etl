@@ -1,11 +1,17 @@
 
+import logging
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_lib_data_ingest.common.pandas_utils import outer_merge
 
+logger = logging.getLogger(__name__)
 
 def build_df(dataservice_entity_dfs_dict, studies):
+    logger.info(
+        f"🏭 Transforming studies ..."
+    )
     investigators = dataservice_entity_dfs_dict.get("investigators")
 
+    study_merged_df = None
     if investigators is not None:
         columns = {
             "external_id": CONCEPT.INVESTIGATOR.ID,
