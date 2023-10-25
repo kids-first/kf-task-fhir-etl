@@ -34,7 +34,8 @@ from kf_lib_data_ingest.etl.load.load_v2 import LoadStage
 from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
 from kf_lib_data_ingest.common.misc import clean_up_df
 
-logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 DOTENV_PATH = find_dotenv()
 if DOTENV_PATH:
@@ -123,7 +124,7 @@ class Ingest:
         mapped_df_dict = defaultdict()
 
         for kf_study_id, descendants in snapshot.items():
-            logging.info(f"  ⏳ Extracting {kf_study_id}")
+            logger.info(f"  ⏳ Extracting {kf_study_id}")
 
             # Loop over descendants
             for endpoint, records in descendants.items():
@@ -133,9 +134,9 @@ class Ingest:
                 else:
                     df = pd.DataFrame.from_dict(records, orient="index")
                 mapped_df_dict.setdefault(kf_study_id, {})[endpoint] = df
-                logging.info(f"    📁 {endpoint} {df.shape}")
+                logger.info(f"    📁 {endpoint} {df.shape}")
 
-            logging.info(f"  ✅ Extracted {kf_study_id}")
+            logger.info(f"  ✅ Extracted {kf_study_id}")
 
         return mapped_df_dict
 
@@ -150,7 +151,7 @@ class Ingest:
         merged_df_dict = defaultdict()
 
         for kf_study_id, study_mapped_df_dict in mapped_df_dict.items():
-            logging.info(f"  ⏳ Transforming {kf_study_id}")
+            logger.info(f"  ⏳ Transforming {kf_study_id}")
             merged_df_dict.setdefault(kf_study_id, {})
             study_merged_df, study_all_targets = None, set()
 
@@ -575,7 +576,7 @@ class Ingest:
                 target for target in all_targets if target in study_all_targets
             ]
 
-            logging.info(f"  ✅ Transformed {kf_study_id}")
+            logger.info(f"  ✅ Transformed {kf_study_id}")
 
         return merged_df_dict
 
@@ -590,7 +591,7 @@ class Ingest:
         )
 
         for kf_study_id in merged_df_dict:
-            logging.info(f"  ⏳ Loading {kf_study_id}")
+            logger.info(f"  ⏳ Loading {kf_study_id}")
 
             LoadStage(
                 target_api_config_path,
@@ -602,12 +603,12 @@ class Ingest:
                 dry_run=dry_run,
             ).run(merged_df_dict[kf_study_id])
 
-            logging.info(f"  ✅ Loaded {kf_study_id}")
+            logger.info(f"  ✅ Loaded {kf_study_id}")
 
 
     def run(self, dry_run=False):
         """Runs an ingest pipeline."""
-        logging.info(f"🚚 Start ingesting {self.kf_study_ids}")
+        logger.info(f"🚚 Start ingesting {self.kf_study_ids}")
         start = time.time()
 
         # Extract
@@ -624,14 +625,14 @@ class Ingest:
             for entity_type, df in df_dict.items():
                 fp = os.path.join(study_dir, f"{entity_type}.csv")
                 df.to_csv(fp)
-                logging.info(
+                logger.info(
                     f"✏️  Wrote {entity_type} transform df to {fp}"
                 )
 
         # Load
         self.load(merged_df_dict, dry_run=dry_run)
 
-        logging.info(
+        logger.info(
             f"✅ Finished ingesting {self.kf_study_ids}; "
             f"Time elapsed: {elapsed_time_hms(start)}",
         )

@@ -3,10 +3,12 @@ Entry point for the Kids First FHIR ETL Task Service Client
 """
 import click
 
+from kf_task_fhir_etl.config import init_logger
 from kf_task_fhir_etl.etl.ingest import Ingest
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
+init_logger()
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
