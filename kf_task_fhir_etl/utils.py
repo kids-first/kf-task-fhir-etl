@@ -3,7 +3,15 @@ import os
 import logging
 import shutil
 
+import pandas
+
 logger = logging.getLogger(__name__)
+
+def df_exists(df):
+    """
+    Check that DF is a pandas DataFrame and not empty
+    """
+    return isinstance(df, pandas.DataFrame) and (not df.empty)
 
 def write_study_tables(merged_df_dict, data_dir):
     """

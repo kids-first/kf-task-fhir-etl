@@ -16,7 +16,8 @@ from kf_lib_data_ingest.common.misc import clean_up_df
 from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
 from kf_task_fhir_etl import utils
 from kf_task_fhir_etl.etl.transform import (
-    study
+    study,
+    investigator
 )
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Practitioner,
@@ -163,38 +164,21 @@ class Ingest:
 
             # studies
             studies = study.build_df(dataservice_entity_dfs_dict)
-            if isinstance(studies, pd.DataFrame) and (not studies.empty):
+            if utils.df_exists(studies):
                 study_all_targets.add(ResearchStudy)
 
             # investigators
-            investigators = dataservice_entity_dfs_dict.get("investigators")
-            if investigators is not None:
-                columns = {
-                    "external_id": CONCEPT.INVESTIGATOR.ID,
-                    "institution": CONCEPT.INVESTIGATOR.INSTITUTION,
-                    "kf_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
-                    "name": CONCEPT.INVESTIGATOR.NAME,
-                    "visible": CONCEPT.INVESTIGATOR.VISIBLE,
-                }
-                investigators = investigators[list(columns.keys())]
-                investigators = investigators.rename(columns=columns)
-                investigators = investigators[
-                    investigators[CONCEPT.INVESTIGATOR.VISIBLE] == True
-                ]
-                if not investigators.empty:
-                    study_merged_df = outer_merge(
-                        studies,
-                        investigators,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
-                    )
-                    study_all_targets.update(
-                        [
-                            Practitioner,
-                            Organization,
-                            PractitionerRole,
-                        ]
-                    )
+            study_merged_df = investigator.build_df(
+                dataservice_entity_dfs_dict, studies
+            )
+            if utils.df_exists(study_merged_df):
+                study_all_targets.update(
+                    [
+                        Practitioner,
+                        Organization,
+                        PractitionerRole,
+                    ]
+                )
 
             # participants
             participants = dataservice_entity_dfs_dict.get("participants")
