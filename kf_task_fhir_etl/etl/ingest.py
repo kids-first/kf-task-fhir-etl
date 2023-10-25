@@ -609,25 +609,32 @@ class Ingest:
             logger.info(f"  ✅ Loaded {kf_study_id}")
 
 
-    def run(self, dry_run=False, write_output=False):
+    def run(self, dry_run=False, write_output=False, stages=None):
         """Runs an ingest pipeline."""
+        if not stages:
+            stages = ["e", "t", "l"]
+
         logger.info(f"🚚 Start ingesting {self.kf_study_ids}")
         start = time.time()
 
         # Extract and write output to file
+        logger.info(f"🏭 Start extracting {self.kf_study_ids}")
         mapped_df_dict = self.extract()
         if write_output:
             data_dir = os.path.join(DATA_DIR, "extract")
             utils.write_study_tables(mapped_df_dict, data_dir) 
 
         # Transform and write output to file
-        merged_df_dict = self.transform(mapped_df_dict)
-        if write_output:
-            data_dir = os.path.join(DATA_DIR, "transform")
-            utils.write_study_tables(merged_df_dict, data_dir) 
+        if "t" in stages:
+            logger.info(f"🏭 Start transforming {self.kf_study_ids}")
+            merged_df_dict = self.transform(mapped_df_dict)
+            if write_output:
+                data_dir = os.path.join(DATA_DIR, "transform")
+                utils.write_study_tables(merged_df_dict, data_dir) 
 
         # Load
-        self.load(merged_df_dict, dry_run=dry_run)
+        if "l" in stages:
+            self.load(merged_df_dict, dry_run=dry_run)
 
         logger.info(
             f"✅ Finished ingesting {self.kf_study_ids}; "
