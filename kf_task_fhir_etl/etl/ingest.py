@@ -153,13 +153,13 @@ class Ingest:
         """
         merged_df_dict = defaultdict()
 
-        for kf_study_id, study_mapped_df_dict in mapped_df_dict.items():
+        for kf_study_id, dataservice_entity_dfs_dict in mapped_df_dict.items():
             logger.info(f"  ⏳ Transforming {kf_study_id}")
             merged_df_dict.setdefault(kf_study_id, {})
             study_merged_df, study_all_targets = None, set()
 
             # studies
-            studies = study_mapped_df_dict.get("studies")
+            studies = dataservice_entity_dfs_dict.get("studies")
             if studies is not None:
                 columns = {
                     "investigator_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
@@ -183,7 +183,7 @@ class Ingest:
                     study_all_targets.add(ResearchStudy)
 
             # investigators
-            investigators = study_mapped_df_dict.get("investigators")
+            investigators = dataservice_entity_dfs_dict.get("investigators")
             if investigators is not None:
                 columns = {
                     "external_id": CONCEPT.INVESTIGATOR.ID,
@@ -213,7 +213,7 @@ class Ingest:
                     )
 
             # participants
-            participants = study_mapped_df_dict.get("participants")
+            participants = dataservice_entity_dfs_dict.get("participants")
             if participants is not None:
                 columns = {
                     "family_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
@@ -250,7 +250,7 @@ class Ingest:
                     )
 
             # family-relationships
-            family_relationships = study_mapped_df_dict.get("family-relationships")
+            family_relationships = dataservice_entity_dfs_dict.get("family-relationships")
             if family_relationships is not None:
                 columns = {
                     "participant1_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID,
@@ -272,7 +272,7 @@ class Ingest:
                     study_all_targets.add(FamilyRelationship)
 
             # families
-            families = study_mapped_df_dict.get("families")
+            families = dataservice_entity_dfs_dict.get("families")
             if families is not None:
                 columns = {
                     "external_id": CONCEPT.FAMILY.ID,
@@ -292,7 +292,7 @@ class Ingest:
                     study_all_targets.add(Family)
 
             # diagnoses
-            diagnoses = study_mapped_df_dict.get("diagnoses")
+            diagnoses = dataservice_entity_dfs_dict.get("diagnoses")
             if diagnoses is not None:
                 columns = {
                     "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
@@ -322,7 +322,7 @@ class Ingest:
                     study_all_targets.add(Disease)
 
             # phenotypes
-            phenotypes = study_mapped_df_dict.get("phenotypes")
+            phenotypes = dataservice_entity_dfs_dict.get("phenotypes")
             if phenotypes is not None:
                 columns = {
                     "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
@@ -348,7 +348,7 @@ class Ingest:
                     study_all_targets.add(Phenotype)
 
             # outcomes
-            outcomes = study_mapped_df_dict.get("outcomes")
+            outcomes = dataservice_entity_dfs_dict.get("outcomes")
             if outcomes is not None:
                 columns = {
                     "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
@@ -372,7 +372,7 @@ class Ingest:
                     study_all_targets.add(VitalStatus)
 
             # biospecimen-diagnoses
-            biospecimen_diagnoses = study_mapped_df_dict.get("biospecimen-diagnoses")
+            biospecimen_diagnoses = dataservice_entity_dfs_dict.get("biospecimen-diagnoses")
             if biospecimen_diagnoses is not None:
                 columns = {
                     "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
@@ -395,7 +395,7 @@ class Ingest:
                     )
 
             # biospecimens
-            biospecimens = study_mapped_df_dict.get("biospecimens")
+            biospecimens = dataservice_entity_dfs_dict.get("biospecimens")
             if biospecimens is not None:
                 columns = {
                     "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
@@ -449,7 +449,7 @@ class Ingest:
                     )
 
             # biospecimen-genomic-files
-            biospecimen_genomic_files = study_mapped_df_dict.get(
+            biospecimen_genomic_files = dataservice_entity_dfs_dict.get(
                 "biospecimen-genomic-files"
             )
             if biospecimen_genomic_files is not None:
@@ -479,7 +479,7 @@ class Ingest:
                     )
 
             # genomic-files
-            genomic_files = study_mapped_df_dict.get("genomic-files")
+            genomic_files = dataservice_entity_dfs_dict.get("genomic-files")
             if genomic_files is not None:
                 columns = {
                     "availability": CONCEPT.GENOMIC_FILE.AVAILABILITY,
@@ -514,7 +514,7 @@ class Ingest:
                     )
 
             # sequencing-experiment-genomic-files
-            sequencing_experiment_genomic_files = study_mapped_df_dict.get(
+            sequencing_experiment_genomic_files = dataservice_entity_dfs_dict.get(
                 "sequencing-experiment-genomic-files"
             )
             if sequencing_experiment_genomic_files is not None:
@@ -548,7 +548,7 @@ class Ingest:
                     )
 
             # sequencing-experiments
-            sequencing_experiments = study_mapped_df_dict.get("sequencing-experiments")
+            sequencing_experiments = dataservice_entity_dfs_dict.get("sequencing-experiments")
             if (
                 sequencing_experiment_genomic_files is not None
                 and sequencing_experiments is not None
