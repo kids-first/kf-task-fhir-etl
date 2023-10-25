@@ -1,4 +1,4 @@
-import logging, os, time
+import logging, os, time, shutil
 from collections import defaultdict
 
 from dotenv import find_dotenv, load_dotenv
@@ -31,7 +31,7 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
 from kf_task_fhir_etl.target_api_plugins.kf_api_fhir_service import all_targets
 from kf_lib_data_ingest.config import DEFAULT_KEY
 from kf_lib_data_ingest.etl.load.load_v2 import LoadStage
-from kf_task_fhir_etl.config import ROOT_DIR
+from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
 from kf_lib_data_ingest.common.misc import clean_up_df
 
 logging.basicConfig(level=logging.INFO)
@@ -586,7 +586,7 @@ class Ingest:
         :type merged_df_dict: dict
         """
         target_api_config_path = os.path.join(
-            ROOT_DIR, "target_api_plugins", "kf_api_fhir_service.py"
+            ROOT_DIR, "kf_task_fhir_etl", "target_api_plugins", "kf_api_fhir_service.py"
         )
 
         for kf_study_id in merged_df_dict:
@@ -615,6 +615,18 @@ class Ingest:
 
         # Transform
         merged_df_dict = self.transform(mapped_df_dict)
+
+        # Write output to file
+        shutil.rmtree(DATA_DIR, ignore_errors=True)
+        for study_id, df_dict in merged_df_dict.items():
+            study_dir = os.path.join(DATA_DIR, study_id)
+            os.makedirs(study_dir, exist_ok=True)
+            for entity_type, df in df_dict.items():
+                fp = os.path.join(study_dir, f"{entity_type}.csv")
+                df.to_csv(fp)
+                logging.info(
+                    f"✏️  Wrote {entity_type} transform df to {fp}"
+                )
 
         # Load
         self.load(merged_df_dict, dry_run=dry_run)
