@@ -15,8 +15,9 @@ def cli():
 
 
 @click.command()
+@click.option('--dry-run', is_flag=True)
 @click.argument("kf_study_ids", required=True, nargs=-1)
-def fhir_etl(kf_study_ids):
+def fhir_etl(kf_study_ids, dry_run):
     """
     Ingest a Kids First study(ies) into a FHIR server.
 
@@ -26,7 +27,7 @@ def fhir_etl(kf_study_ids):
         KF_STUDY_IDS - a KF study ID(s) concatenated by whitespace, e.g., SD_BHJXBDQK SD_M3DBXD12
     """
     ingest = Ingest(kf_study_ids)
-    ingest.run()
+    ingest.run(dry_run=dry_run)
 
 
 cli.add_command(fhir_etl)

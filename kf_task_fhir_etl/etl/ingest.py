@@ -579,7 +579,7 @@ class Ingest:
 
         return merged_df_dict
 
-    def load(self, merged_df_dict):
+    def load(self, merged_df_dict, dry_run=False):
         """Loads records.
 
         :param merged_df_dict: An output from the above transform stage
@@ -599,12 +599,13 @@ class Ingest:
                 kf_study_id,
                 cache_dir="./",
                 use_async=True,
+                dry_run=dry_run,
             ).run(merged_df_dict[kf_study_id])
 
             logging.info(f"  ✅ Loaded {kf_study_id}")
 
 
-    def run(self):
+    def run(self, dry_run=False):
         """Runs an ingest pipeline."""
         logging.info(f"🚚 Start ingesting {self.kf_study_ids}")
         start = time.time()
@@ -616,7 +617,7 @@ class Ingest:
         merged_df_dict = self.transform(mapped_df_dict)
 
         # Load
-        self.load(merged_df_dict)
+        self.load(merged_df_dict, dry_run=dry_run)
 
         logging.info(
             f"✅ Finished ingesting {self.kf_study_ids}; "
