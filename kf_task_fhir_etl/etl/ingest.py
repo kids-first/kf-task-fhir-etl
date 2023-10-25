@@ -248,64 +248,34 @@ class Ingest:
                 study_all_targets.add(VitalStatus)
 
             # biospecimen-diagnoses
-            study_merged_df = biospecimen_diagnosis.build_df(
+            study_merged_df, biospecimen_diagnoses = biospecimen_diagnosis.build_df(
                 dataservice_entity_dfs_dict, study_merged_df
             )
-            biospecimen_diagnoses = dataservice_entity_dfs_dict.get("biospecimen_diagnoses")
 
             # biospecimens
-            biospecimens = dataservice_entity_dfs_dict.get("biospecimens")
-            if biospecimens is not None:
-                columns = {
-                    "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                    "sequencing_center_id": CONCEPT.SEQUENCING.CENTER.TARGET_SERVICE_ID,
-                    "age_at_event_days": CONCEPT.BIOSPECIMEN.EVENT_AGE_DAYS,
-                    "analyte_type": CONCEPT.BIOSPECIMEN.ANALYTE,
-                    "composition": CONCEPT.BIOSPECIMEN.COMPOSITION,
-                    "consent_type": CONCEPT.BIOSPECIMEN.CONSENT_SHORT_NAME,
-                    "dbgap_consent_code": CONCEPT.BIOSPECIMEN.DBGAP_STYLE_CONSENT_CODE,
-                    "external_aliquot_id": CONCEPT.BIOSPECIMEN.ID,
-                    "external_sample_id": CONCEPT.BIOSPECIMEN_GROUP.ID,
-                    "kf_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
-                    "method_of_sample_procurement": CONCEPT.BIOSPECIMEN.SAMPLE_PROCUREMENT,
-                    "ncit_id_anatomical_site": CONCEPT.BIOSPECIMEN.NCIT_ANATOMY_SITE_ID,
-                    "ncit_id_tissue_type": CONCEPT.BIOSPECIMEN.NCIT_TISSUE_TYPE_ID,
-                    "source_text_anatomical_site": CONCEPT.BIOSPECIMEN.ANATOMY_SITE,
-                    "source_text_tissue_type": CONCEPT.BIOSPECIMEN.TISSUE_TYPE,
-                    "source_text_tumor_descriptor": CONCEPT.BIOSPECIMEN.TUMOR_DESCRIPTOR,
-                    "spatial_descriptor": CONCEPT.BIOSPECIMEN.SPATIAL_DESCRIPTOR,
-                    "uberon_id_anatomical_site": CONCEPT.BIOSPECIMEN.UBERON_ANATOMY_SITE_ID,
-                    "visible": CONCEPT.BIOSPECIMEN.VISIBLE,
-                    "volume_ul": CONCEPT.BIOSPECIMEN.VOLUME_UL,
-                }
-                biospecimens = biospecimens[list(columns.keys())]
-                biospecimens = biospecimens.rename(columns=columns)
-                biospecimens = biospecimens[
-                    biospecimens[CONCEPT.BIOSPECIMEN.VISIBLE] == True
-                ]
-                if not biospecimens.empty:
-                    on = [CONCEPT.PARTICIPANT.TARGET_SERVICE_ID]
-                    study_all_targets.update(
-                        [
-                            SequencingCenter,
-                            ParentalSpecimen,
-                            ChildrenSpecimen,
-                        ]
-                    )
+            biospecimens = biospecimen.build_df(
+                dataservice_entity_dfs_dict, study_merged_df
+            )
+            if utils.df_exists(biospecimens):
+               on = [CONCEPT.PARTICIPANT.TARGET_SERVICE_ID]
+               study_all_targets.update(
+                   [
+                       SequencingCenter,
+                       ParentalSpecimen,
+                       ChildrenSpecimen,
+                   ]
+               )
 
-                    if (
-                        biospecimen_diagnoses is not None
-                        and not biospecimen_diagnoses.empty
-                    ):
-                        on.append(CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID)
-                        study_all_targets.add(Histopathology)
+               if utils.df_exists(biospecimen_diagnoses):
+                   on.append(CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID)
+                   study_all_targets.add(Histopathology)
 
-                    study_merged_df = outer_merge(
-                        study_merged_df,
-                        biospecimens,
-                        with_merge_detail_dfs=False,
-                        on=on,
-                    )
+               study_merged_df = outer_merge(
+                   study_merged_df,
+                   biospecimens,
+                   with_merge_detail_dfs=False,
+                   on=on,
+               )
 
             # biospecimen-genomic-files
             biospecimen_genomic_files = dataservice_entity_dfs_dict.get(

@@ -32,4 +32,4 @@ def build_df(dataservice_entity_dfs_dict, study_merged_df):
                 on=CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
             )
 
-    return study_merged_df
+    return study_merged_df, biospecimen_diagnoses
