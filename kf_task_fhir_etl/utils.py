@@ -1,14 +1,16 @@
 
 import os
+import logging
 import shutil
 
+logger = logging.getLogger(__name__)
 
 def write_study_tables(merged_df_dict, data_dir):
     """
     Write output of extract or transform stage to file
 
     Structure:
-        data/<study kf id>
+        data_dir/<study kf id>
           - Participant.csv
           - Biospecimen.csv
           ...
@@ -20,6 +22,6 @@ def write_study_tables(merged_df_dict, data_dir):
         for entity_type, df in df_dict.items():
             fp = os.path.join(study_dir, f"{entity_type}.csv")
             df.to_csv(fp)
-            logging.info(
+            logger.info(
                 f"✏️  Wrote {entity_type} transform df to {fp}"
             )

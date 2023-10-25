@@ -6,8 +6,15 @@ from sqlalchemy import create_engine
 import pandas as pd
 
 from kf_utils.dataservice.descendants import *
+
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_lib_data_ingest.common.pandas_utils import outer_merge
+from kf_lib_data_ingest.config import DEFAULT_KEY
+from kf_lib_data_ingest.etl.load.load_v2 import LoadStage
+from kf_lib_data_ingest.common.misc import clean_up_df
+
+from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
+from kf_task_fhir_etl import utils
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Practitioner,
     Organization,
@@ -29,10 +36,6 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     DRSDocumentReferenceIndex,
 )
 from kf_task_fhir_etl.target_api_plugins.kf_api_fhir_service import all_targets
-from kf_lib_data_ingest.config import DEFAULT_KEY
-from kf_lib_data_ingest.etl.load.load_v2 import LoadStage
-from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
-from kf_lib_data_ingest.common.misc import clean_up_df
 
 
 logger = logging.getLogger(__name__)
@@ -606,28 +609,22 @@ class Ingest:
             logger.info(f"  ✅ Loaded {kf_study_id}")
 
 
-    def run(self, dry_run=False):
+    def run(self, dry_run=False, write_output=False):
         """Runs an ingest pipeline."""
         logger.info(f"🚚 Start ingesting {self.kf_study_ids}")
         start = time.time()
 
-        # Extract
+        # Extract and write output to file
         mapped_df_dict = self.extract()
+        if write_output:
+            data_dir = os.path.join(DATA_DIR, "extract")
+            utils.write_study_tables(mapped_df_dict, data_dir) 
 
-        # Transform
+        # Transform and write output to file
         merged_df_dict = self.transform(mapped_df_dict)
-
-        # Write output to file
-        shutil.rmtree(DATA_DIR, ignore_errors=True)
-        for study_id, df_dict in merged_df_dict.items():
-            study_dir = os.path.join(DATA_DIR, study_id)
-            os.makedirs(study_dir, exist_ok=True)
-            for entity_type, df in df_dict.items():
-                fp = os.path.join(study_dir, f"{entity_type}.csv")
-                df.to_csv(fp)
-                logger.info(
-                    f"✏️  Wrote {entity_type} transform df to {fp}"
-                )
+        if write_output:
+            data_dir = os.path.join(DATA_DIR, "transform")
+            utils.write_study_tables(merged_df_dict, data_dir) 
 
         # Load
         self.load(merged_df_dict, dry_run=dry_run)
