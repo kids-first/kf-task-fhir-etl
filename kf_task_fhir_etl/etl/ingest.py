@@ -248,27 +248,10 @@ class Ingest:
                 study_all_targets.add(VitalStatus)
 
             # biospecimen-diagnoses
-            biospecimen_diagnoses = dataservice_entity_dfs_dict.get("biospecimen-diagnoses")
-            if biospecimen_diagnoses is not None:
-                columns = {
-                    "biospecimen_id": CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
-                    "diagnosis_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-                    "external_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.ID,
-                    "kf_id": CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID,
-                    "visible": CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE,
-                }
-                biospecimen_diagnoses = biospecimen_diagnoses[list(columns.keys())]
-                biospecimen_diagnoses = biospecimen_diagnoses.rename(columns=columns)
-                biospecimen_diagnoses = biospecimen_diagnoses[
-                    biospecimen_diagnoses[CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE] == True
-                ]
-                if not biospecimen_diagnoses.empty:
-                    study_merged_df = outer_merge(
-                        study_merged_df,
-                        biospecimen_diagnoses,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-                    )
+            study_merged_df = biospecimen_diagnosis.build_df(
+                dataservice_entity_dfs_dict, study_merged_df
+            )
+            biospecimen_diagnoses = dataservice_entity_dfs_dict.get("biospecimen_diagnoses")
 
             # biospecimens
             biospecimens = dataservice_entity_dfs_dict.get("biospecimens")
