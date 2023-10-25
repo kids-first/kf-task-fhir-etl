@@ -614,11 +614,15 @@ class ParentalSpecimen:
     def get_key_components(cls, record, get_target_id_from_record):
         assert not_none(get_target_id_from_record(Patient, record))
         biospecimen_id = not_none(record[CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID])
-        composition = not_none(record[CONCEPT.BIOSPECIMEN.COMPOSITION])
 
         return {
             "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
-            "identifier:exact": f"{biospecimen_id}_{composition.replace(' ', '_')}",
+            "identifier:exact": "_".join(
+                [
+                    biospecimen_id,
+                    str(record[CONCEPT.BIOSPECIMEN.COMPOSITION]).replace(" ", "_"),
+                ]
+            ),
         }
 
     @classmethod
@@ -633,7 +637,7 @@ class ParentalSpecimen:
         dbgap_consent_code = record.get(CONCEPT.BIOSPECIMEN.DBGAP_STYLE_CONSENT_CODE)
         external_sample_id = record.get(CONCEPT.BIOSPECIMEN_GROUP.ID)
         # tissue_type = record.get(CONCEPT.BIOSPECIMEN.TISSUE_TYPE)
-        composition = record[CONCEPT.BIOSPECIMEN.COMPOSITION]
+        composition = str(record[CONCEPT.BIOSPECIMEN.COMPOSITION])
         # ncit_id_tissue_type = record.get(CONCEPT.BIOSPECIMEN.NCIT_TISSUE_TYPE_ID)
         event_age_days = record.get(CONCEPT.BIOSPECIMEN.EVENT_AGE_DAYS)
         volume_ul = record.get(CONCEPT.BIOSPECIMEN.VOLUME_UL)
