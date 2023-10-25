@@ -15,6 +15,9 @@ from kf_lib_data_ingest.common.misc import clean_up_df
 
 from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
 from kf_task_fhir_etl import utils
+from kf_task_fhir_etl.etl.transform import (
+    study
+)
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Practitioner,
     Organization,
@@ -159,28 +162,9 @@ class Ingest:
             study_merged_df, study_all_targets = None, set()
 
             # studies
-            studies = dataservice_entity_dfs_dict.get("studies")
-            if studies is not None:
-                columns = {
-                    "investigator_id": CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
-                    "attribution": CONCEPT.STUDY.ATTRIBUTION,
-                    "data_access_authority": CONCEPT.STUDY.AUTHORITY,
-                    "domain": "STUDY|DOMAIN",
-                    "external_id": CONCEPT.STUDY.ID,
-                    "kf_id": CONCEPT.STUDY.TARGET_SERVICE_ID,
-                    "name": CONCEPT.STUDY.NAME,
-                    "program": "STUDY|PROGRAM",
-                    "release_status": CONCEPT.STUDY.RELEASE_STATUS,
-                    "short_code": "STUDY|SHORT_CODE",
-                    "short_name": CONCEPT.STUDY.SHORT_NAME,
-                    "version": CONCEPT.STUDY.VERSION,
-                    "visible": CONCEPT.STUDY.VISIBLE,
-                }
-                studies = studies[list(columns.keys())]
-                studies = studies.rename(columns=columns)
-                studies = studies[studies[CONCEPT.STUDY.VISIBLE] == True]
-                if not studies.empty:
-                    study_all_targets.add(ResearchStudy)
+            studies = study.build_df(dataservice_entity_dfs_dict)
+            if isinstance(studies, pd.DataFrame) and (not studies.empty):
+                study_all_targets.add(ResearchStudy)
 
             # investigators
             investigators = dataservice_entity_dfs_dict.get("investigators")
