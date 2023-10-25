@@ -142,3 +142,7 @@ delete.py
 
 # Miscellaneous
 .DS_Store
+
+# vim
+*.swo
+*.swp
