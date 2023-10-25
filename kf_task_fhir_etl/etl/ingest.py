@@ -224,34 +224,12 @@ class Ingest:
                 study_all_targets.add(Family)
 
             # diagnoses
+            study_merged_df = diagnosis.build_df(
+                dataservice_entity_dfs_dict, study_merged_df
+            )
             diagnoses = dataservice_entity_dfs_dict.get("diagnoses")
-            if diagnoses is not None:
-                columns = {
-                    "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                    "age_at_event_days": CONCEPT.DIAGNOSIS.EVENT_AGE_DAYS,
-                    "diagnosis_category": CONCEPT.DIAGNOSIS.CATEGORY,
-                    "external_id": CONCEPT.DIAGNOSIS.ID,
-                    "icd_id_diagnosis": CONCEPT.DIAGNOSIS.ICD_ID,
-                    "kf_id": CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
-                    "mondo_id_diagnosis": CONCEPT.DIAGNOSIS.MONDO_ID,
-                    "ncit_id_diagnosis": CONCEPT.DIAGNOSIS.NCIT_ID,
-                    "source_text_diagnosis": CONCEPT.DIAGNOSIS.NAME,
-                    "source_text_tumor_location": CONCEPT.DIAGNOSIS.TUMOR_LOCATION,
-                    "uberon_id_tumor_location": CONCEPT.DIAGNOSIS.UBERON_TUMOR_LOCATION_ID,
-                    "spatial_descriptor": CONCEPT.DIAGNOSIS.SPATIAL_DESCRIPTOR,
-                    "visible": CONCEPT.DIAGNOSIS.VISIBLE,
-                }
-                diagnoses = diagnoses[list(columns.keys())]
-                diagnoses = diagnoses.rename(columns=columns)
-                diagnoses = diagnoses[diagnoses[CONCEPT.DIAGNOSIS.VISIBLE] == True]
-                if not diagnoses.empty:
-                    study_merged_df = outer_merge(
-                        study_merged_df,
-                        diagnoses,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                    )
-                    study_all_targets.add(Disease)
+            if utils.df_exists(families):
+                study_all_targets.add(Disease)
 
             # phenotypes
             phenotypes = dataservice_entity_dfs_dict.get("phenotypes")
