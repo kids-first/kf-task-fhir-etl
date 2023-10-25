@@ -17,7 +17,19 @@ from kf_task_fhir_etl.config import ROOT_DIR, DATA_DIR
 from kf_task_fhir_etl import utils
 from kf_task_fhir_etl.etl.transform import (
     study,
-    investigator
+    investigator,
+    participant,
+    family,
+    family_relationship,
+    biospecimen,
+    biospecimen_diagnosis,
+    biospecimen_genomic_file,
+    diagnosis,
+    phenotype,
+    outcome,
+    sequencing_experiment,
+    sequencing_experiment_genomic_file,
+    genomic_file
 )
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Practitioner,
@@ -171,7 +183,8 @@ class Ingest:
             study_merged_df = investigator.build_df(
                 dataservice_entity_dfs_dict, studies
             )
-            if utils.df_exists(study_merged_df):
+            investigators = dataservice_entity_dfs_dict.get("investigators")
+            if utils.df_exists(investigators):
                 study_all_targets.update(
                     [
                         Practitioner,
@@ -181,63 +194,26 @@ class Ingest:
                 )
 
             # participants
+            study_merged_df = participant.build_df(
+                dataservice_entity_dfs_dict, study_merged_df, studies
+            )
             participants = dataservice_entity_dfs_dict.get("participants")
-            if participants is not None:
-                columns = {
-                    "family_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
-                    "study_id": CONCEPT.STUDY.TARGET_SERVICE_ID,
-                    "affected_status": CONCEPT.PARTICIPANT.IS_AFFECTED_UNDER_STUDY,
-                    "diagnosis_category": CONCEPT.STUDY.CATEGORY,
-                    "ethnicity": CONCEPT.PARTICIPANT.ETHNICITY,
-                    "external_id": CONCEPT.PARTICIPANT.ID,
-                    "gender": CONCEPT.PARTICIPANT.GENDER,
-                    "is_proband": CONCEPT.PARTICIPANT.IS_PROBAND,
-                    "kf_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
-                    "race": CONCEPT.PARTICIPANT.RACE,
-                    "species": CONCEPT.PARTICIPANT.SPECIES,
-                    "visible": CONCEPT.PARTICIPANT.VISIBLE,
-                }
-                participants = participants[list(columns.keys())]
-                participants = participants.rename(columns=columns)
-                participants = participants[
-                    participants[CONCEPT.PARTICIPANT.VISIBLE] == True
-                ]
-                if not participants.empty:
-                    study_merged_df = outer_merge(
-                        study_merged_df if study_merged_df is not None else studies,
-                        participants,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.STUDY.TARGET_SERVICE_ID,
-                    )
-                    study_all_targets.update(
-                        [
-                            Patient,
-                            ProbandStatus,
-                            ResearchSubject,
-                        ]
-                    )
+            if utils.df_exists(participants):
+                study_all_targets.update(
+                    [
+                        Patient,
+                        ProbandStatus,
+                        ResearchSubject,
+                    ]
+                )
 
             # family-relationships
-            family_relationships = dataservice_entity_dfs_dict.get("family-relationships")
-            if family_relationships is not None:
-                columns = {
-                    "participant1_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID,
-                    "participant2_id": CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID,
-                    "external_id": CONCEPT.FAMILY_RELATIONSHIP.ID,
-                    "kf_id": CONCEPT.FAMILY_RELATIONSHIP.TARGET_SERVICE_ID,
-                    "participant1_to_participant2_relation": CONCEPT.FAMILY_RELATIONSHIP.RELATION_FROM_1_TO_2,
-                    "visible": CONCEPT.FAMILY_RELATIONSHIP.VISIBLE,
-                }
-                family_relationships = family_relationships[list(columns.keys())]
-                family_relationships = family_relationships.rename(columns=columns)
-                family_relationships = family_relationships[
-                    family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
-                ]
-                if not family_relationships.empty:
-                    merged_df_dict[kf_study_id]["family_relationship"] = clean_up_df(
-                        family_relationships
-                    )
-                    study_all_targets.add(FamilyRelationship)
+            family_relationships = family_relationship.build_df(
+                dataservice_entity_dfs_dict
+            )
+            if utils.df_exists(family_relationships):
+                merged_df_dict[kf_study_id]["family_relationship"] = family_relationships 
+                study_all_targets.add(FamilyRelationship)
 
             # families
             families = dataservice_entity_dfs_dict.get("families")
