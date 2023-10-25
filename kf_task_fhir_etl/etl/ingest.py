@@ -216,24 +216,12 @@ class Ingest:
                 study_all_targets.add(FamilyRelationship)
 
             # families
+            study_merged_df = family.build_df(
+                dataservice_entity_dfs_dict, study_merged_df
+            )
             families = dataservice_entity_dfs_dict.get("families")
-            if families is not None:
-                columns = {
-                    "external_id": CONCEPT.FAMILY.ID,
-                    "kf_id": CONCEPT.FAMILY.TARGET_SERVICE_ID,
-                    "visible": CONCEPT.FAMILY.VISIBLE,
-                }
-                families = families[list(columns.keys())]
-                families = families.rename(columns=columns)
-                families = families[families[CONCEPT.FAMILY.VISIBLE] == True]
-                if not families.empty:
-                    study_merged_df = outer_merge(
-                        study_merged_df,
-                        families,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.FAMILY.TARGET_SERVICE_ID,
-                    )
-                    study_all_targets.add(Family)
+            if utils.df_exists(families):
+                study_all_targets.add(Family)
 
             # diagnoses
             diagnoses = dataservice_entity_dfs_dict.get("diagnoses")
