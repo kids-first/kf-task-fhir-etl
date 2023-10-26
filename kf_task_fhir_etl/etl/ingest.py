@@ -307,7 +307,14 @@ class Ingest:
             )
 
             # Clean up merged data frame
-            entity_dfs_per_study[kf_study_id][DEFAULT_KEY] = clean_up_df(study_merged_df)
+            entity_dfs_per_study[kf_study_id][DEFAULT_KEY] = study_merged_df
+            for study_id, entity_dfs in entity_dfs_per_study.items():
+                for entity_type, df in entity_dfs.items():
+                    logger.info(
+                        f"🧼 Cleaning up {entity_type} df,"
+                        f" found {df.shape[0]} records"
+                    )
+                    entity_dfs[entity_type] = clean_up_df(df)
 
             self.all_targets[kf_study_id] = [
                 target for target in all_targets if target in study_all_targets
