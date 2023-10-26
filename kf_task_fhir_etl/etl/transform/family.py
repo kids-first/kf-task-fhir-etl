@@ -11,6 +11,7 @@ def build_df(dataservice_entity_dfs_dict, participants):
     )
     families = dataservice_entity_dfs_dict.get("families")
 
+    study_merged_df = None
     if families is not None:
         columns = {
             "external_id": CONCEPT.FAMILY.ID,
