@@ -6,7 +6,7 @@ from kf_lib_data_ingest.common.pandas_utils import outer_merge
 
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict, study_merged_df):
+def build_df(dataservice_entity_dfs_dict):
     logger.info(
         f"🏭 Transforming genomic_files ..."
     )
@@ -29,12 +29,5 @@ def build_df(dataservice_entity_dfs_dict, study_merged_df):
         genomic_files = genomic_files[
             genomic_files[CONCEPT.GENOMIC_FILE.VISIBLE] == True
         ]
-        if not genomic_files.empty:
-            study_merged_df = outer_merge(
-                study_merged_df,
-                genomic_files,
-                with_merge_detail_dfs=False,
-                on=CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-            )
 
-    return study_merged_df
+    return genomic_files

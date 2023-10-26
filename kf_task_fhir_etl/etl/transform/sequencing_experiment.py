@@ -8,17 +8,12 @@ from kf_task_fhir_etl import utils
 
 logger = logging.getLogger(__name__)
 
-def build_df(
-    dataservice_entity_dfs_dict, study_merged_df, sequencing_experiment_genomic_files
-):
+def build_df(dataservice_entity_dfs_dict):
     logger.info(
         f"🏭 Transforming sequencing_experiments ..."
     )
     sequencing_experiments = dataservice_entity_dfs_dict.get("sequencing-experiments")
-    if (
-        utils.df_exists(sequencing_experiment_genomic_files)
-        and utils.df_exists(sequencing_experiments)
-    ):
+    if sequencing_experiments is not None:
         columns = {
             "experiment_strategy": CONCEPT.SEQUENCING.STRATEGY,
             "external_id": CONCEPT.SEQUENCING.ID,
@@ -30,12 +25,5 @@ def build_df(
         sequencing_experiments = sequencing_experiments[
             sequencing_experiments[CONCEPT.SEQUENCING.VISIBLE] == True
         ]
-        if not sequencing_experiments.empty:
-            study_merged_df = outer_merge(
-                study_merged_df,
-                sequencing_experiments,
-                with_merge_detail_dfs=False,
-                on=CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
-            )
 
-    return study_merged_df
+    return sequencing_experiments

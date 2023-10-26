@@ -430,6 +430,8 @@ class DRSDocumentReference:
     @classmethod
     def transform_records_list(cls, records_list):
         records = pd.DataFrame(records_list)
+        print("********************* entity builder: drs_document_reference")
+        print(records.nunique())
         by = [
             CONCEPT.STUDY.TARGET_SERVICE_ID,
             CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
@@ -437,9 +439,9 @@ class DRSDocumentReference:
         if records.get(CONCEPT.SEQUENCING.TARGET_SERVICE_ID) is not None:
             by.append(CONCEPT.SEQUENCING.TARGET_SERVICE_ID)
 
-        transfromed_records_list = []
+        transformed_records_list = []
         for names, group in records.groupby(by=by):
-            transfromed_record = {
+            transformed_record = {
                 CONCEPT.STUDY.TARGET_SERVICE_ID: names[0],
                 CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID: names[1],
             }
@@ -451,7 +453,7 @@ class DRSDocumentReference:
                     CONCEPT.BIOSPECIMEN.COMPOSITION,
                 ]
             ).drop_duplicates()
-            transfromed_record.update(
+            transformed_record.update(
                 {
                     CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: pb.get(
                         CONCEPT.PARTICIPANT.TARGET_SERVICE_ID
@@ -466,7 +468,7 @@ class DRSDocumentReference:
             )
 
             try:
-                transfromed_record.update(
+                transformed_record.update(
                     {
                         CONCEPT.SEQUENCING.TARGET_SERVICE_ID: names[2],
                         CONCEPT.SEQUENCING.STRATEGY: group.get(
@@ -477,9 +479,10 @@ class DRSDocumentReference:
             except:
                 pass
 
-            transfromed_records_list.append(transfromed_record)
+            transformed_records_list.append(transformed_record)
 
-        return transfromed_records_list
+        print(len(transformed_records_list))
+        return transformed_records_list
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):

@@ -285,37 +285,43 @@ class Ingest:
                         entity_dfs_per_study[kf_study_id][t.class_name] = biospecimen_diagnoses
 
 
-            ## biospecimen-genomic-files
-            #study_merged_df = biospecimen_genomic_file.build_df(
-            #    dataservice_entity_dfs_dict, study_merged_df
-            #)
+            # genomic-files
+            genomic_files = genomic_file.build_df(
+                dataservice_entity_dfs_dict
+            ) 
+            # biospecimen-genomic-files
+            if utils.df_exists(biospecimens) and utils.df_exists(genomic_files):
+                # TODO remove after debug
+                genomic_files, bs_gf = biospecimen_genomic_file.build_df(
+                    dataservice_entity_dfs_dict, biospecimens, genomic_files
+                )
 
-            ## genomic-files
-            #study_merged_df = genomic_file.build_df(
-            #    dataservice_entity_dfs_dict, study_merged_df
-            #)
-            #genomic_files = dataservice_entity_dfs_dict.get("genomic-files")
-            ##if utils.df_exists(genomic_files):
-            ##    study_all_targets.update(
-            ##        [
-            ##            DRSDocumentReference,
-            ##            # Below is an intermediate solution for index files
-            ##            DRSDocumentReferenceIndex,
-            ##        ]
-            ##    )
+            # sequencing-experiments - merge in if they exist
+            sequencing_experiments = sequencing_experiment.build_df(
+                dataservice_entity_dfs_dict, 
+            )
+            if utils.df_exists(sequencing_experiments):
+                # genomic-files with sequencing experiment
+                genomic_files, seq_gf = sequencing_experiment_genomic_file.build_df(
+                    dataservice_entity_dfs_dict,
+                    sequencing_experiments,
+                    genomic_files
+                )
+                print("******************** transform genomic files")
+                print(genomic_files.nunique())
 
-            ## sequencing-experiment-genomic-files
-            #study_merged_df, seq_gfs = sequencing_experiment_genomic_file.build_df(
-            #    dataservice_entity_dfs_dict, study_merged_df
-            #)
+            if utils.df_exists(genomic_files):
+                targets = [
+                    DRSDocumentReference,
+                    # Below is an intermediate solution for index files
+                    DRSDocumentReferenceIndex,
+                ]
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = genomic_files
 
-            ## sequencing-experiments
-            #study_merged_df = sequencing_experiment.build_df(
-            #    dataservice_entity_dfs_dict, study_merged_df, seq_gfs
-            #)
 
-            # Clean up merged data frame
-            # entity_dfs_per_study[kf_study_id][DEFAULT_KEY] = study_merged_df
+            # Clean up merged data frames
             for study_id, entity_dfs in entity_dfs_per_study.items():
                 for entity_type, df in entity_dfs.items():
                     logger.info(
