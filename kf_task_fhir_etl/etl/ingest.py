@@ -177,7 +177,10 @@ class Ingest:
             # studies
             studies = study.build_df(dataservice_entity_dfs_dict)
             if utils.df_exists(studies):
-                study_all_targets.add(ResearchStudy)
+                targets = [ResearchStudy]
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = studies
 
             # investigators
             investigators = investigator.build_df(
@@ -189,9 +192,9 @@ class Ingest:
                         Organization,
                         PractitionerRole,
                     ]
+                study_all_targets.update(targets)
                 for t in targets:
                     entity_dfs_per_study[kf_study_id][t.class_name] = investigators
-                study_all_targets.update(targets)
 
             # participants
             participants = participant.build_df(
@@ -203,9 +206,9 @@ class Ingest:
                         ProbandStatus,
                         ResearchSubject,
                     ]
+                study_all_targets.update(targets)
                 for t in targets:
                     entity_dfs_per_study[kf_study_id][t.class_name] = participants
-                study_all_targets.update(targets)
 
             # family-relationships
             family_relationships = family_relationship.build_df(
@@ -216,16 +219,18 @@ class Ingest:
                 study_all_targets.add(FamilyRelationship)
 
             # families
-            study_merged_df = family.build_df(
+            families = family.build_df(
                 dataservice_entity_dfs_dict, participants
             )
-            families = dataservice_entity_dfs_dict.get("families")
             if utils.df_exists(families):
-                study_all_targets.add(Family)
+                targets = [Family]
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = families
 
             # diagnoses
             study_merged_df = diagnosis.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
+                dataservice_entity_dfs_dict, participants
             )
             diagnoses = dataservice_entity_dfs_dict.get("diagnoses")
             if utils.df_exists(diagnoses):
