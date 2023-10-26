@@ -167,11 +167,11 @@ class Ingest:
         :return: A dictionary of outer-merged data frames
         :rtype: dict
         """
-        merged_df_dict = defaultdict()
+        entity_dfs_per_study = defaultdict()
 
         for kf_study_id, dataservice_entity_dfs_dict in mapped_df_dict.items():
             logger.info(f"  ⏳ Transforming {kf_study_id}")
-            merged_df_dict.setdefault(kf_study_id, {})
+            entity_dfs_per_study.setdefault(kf_study_id, {})
             study_merged_df, study_all_targets = None, set()
 
             # studies
@@ -212,7 +212,7 @@ class Ingest:
                 dataservice_entity_dfs_dict
             )
             if utils.df_exists(family_relationships):
-                merged_df_dict[kf_study_id]["family_relationship"] = family_relationships 
+                entity_dfs_per_study[kf_study_id]["family_relationship"] = family_relationships 
                 study_all_targets.add(FamilyRelationship)
 
             # families
@@ -307,7 +307,7 @@ class Ingest:
             )
 
             # Clean up merged data frame
-            merged_df_dict[kf_study_id][DEFAULT_KEY] = clean_up_df(study_merged_df)
+            entity_dfs_per_study[kf_study_id][DEFAULT_KEY] = clean_up_df(study_merged_df)
 
             self.all_targets[kf_study_id] = [
                 target for target in all_targets if target in study_all_targets
@@ -315,19 +315,19 @@ class Ingest:
 
             logger.info(f"  ✅ Transformed {kf_study_id}")
 
-        return merged_df_dict
+        return entity_dfs_per_study
 
-    def load(self, merged_df_dict, dry_run=False):
+    def load(self, entity_dfs_per_study, dry_run=False):
         """Loads records.
 
-        :param merged_df_dict: An output from the above transform stage
-        :type merged_df_dict: dict
+        :param entity_dfs_per_study: An output from the above transform stage
+        :type entity_dfs_per_study: dict
         """
         target_api_config_path = os.path.join(
             ROOT_DIR, "kf_task_fhir_etl", "target_api_plugins", "kf_api_fhir_service.py"
         )
 
-        for kf_study_id in merged_df_dict:
+        for kf_study_id in entity_dfs_per_study:
             logger.info(f"  ⏳ Loading {kf_study_id}")
 
             LoadStage(
@@ -338,7 +338,7 @@ class Ingest:
                 cache_dir="./",
                 use_async=True,
                 dry_run=dry_run,
-            ).run(merged_df_dict[kf_study_id])
+            ).run(entity_dfs_per_study[kf_study_id])
 
             logger.info(f"  ✅ Loaded {kf_study_id}")
 
@@ -361,14 +361,14 @@ class Ingest:
         # Transform and write output to file
         if "t" in stages:
             logger.info(f"🏭 Start transforming {self.kf_study_ids}")
-            merged_df_dict = self.transform(mapped_df_dict)
+            entity_dfs_per_study = self.transform(mapped_df_dict)
             if write_output:
                 data_dir = os.path.join(DATA_DIR, "transform")
-                utils.write_study_tables(merged_df_dict, data_dir) 
+                utils.write_study_tables(entity_dfs_per_study, data_dir) 
 
         # Load
         if "l" in stages:
-            self.load(merged_df_dict, dry_run=dry_run)
+            self.load(entity_dfs_per_study, dry_run=dry_run)
 
         logger.info(
             f"✅ Finished ingesting {self.kf_study_ids}; "
