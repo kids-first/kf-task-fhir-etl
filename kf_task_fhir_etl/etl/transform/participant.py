@@ -6,7 +6,7 @@ from kf_lib_data_ingest.common.pandas_utils import outer_merge
 
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict, study_merged_df, studies):
+def build_df(dataservice_entity_dfs_dict, studies):
     logger.info(
         f"🏭 Transforming participants ..."
     )
@@ -34,8 +34,9 @@ def build_df(dataservice_entity_dfs_dict, study_merged_df, studies):
         ]
         if not participants.empty:
             study_merged_df = outer_merge(
-                study_merged_df if study_merged_df is not None else studies,
+                studies,
                 participants,
+                how="inner",
                 with_merge_detail_dfs=False,
                 on=CONCEPT.STUDY.TARGET_SERVICE_ID,
             )

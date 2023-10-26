@@ -194,18 +194,18 @@ class Ingest:
                 study_all_targets.update(targets)
 
             # participants
-            study_merged_df = participant.build_df(
-                dataservice_entity_dfs_dict, study_merged_df, studies
+            participants = participant.build_df(
+                dataservice_entity_dfs_dict, studies
             )
-            participants = dataservice_entity_dfs_dict.get("participants")
             if utils.df_exists(participants):
-                study_all_targets.update(
-                    [
+                targets = [
                         Patient,
                         ProbandStatus,
                         ResearchSubject,
                     ]
-                )
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = participants
+                study_all_targets.update(targets)
 
             # family-relationships
             family_relationships = family_relationship.build_df(
@@ -217,7 +217,7 @@ class Ingest:
 
             # families
             study_merged_df = family.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
+                dataservice_entity_dfs_dict, participants
             )
             families = dataservice_entity_dfs_dict.get("families")
             if utils.df_exists(families):
