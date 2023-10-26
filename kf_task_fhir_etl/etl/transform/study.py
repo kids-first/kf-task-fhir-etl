@@ -4,7 +4,7 @@ from kf_lib_data_ingest.common.concept_schema import CONCEPT
 
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict):
+def build_df(dataservice_entity_dfs_dict, study_id):
     logger.info(
         f"🏭 Transforming studies ..."
     )
@@ -28,6 +28,7 @@ def build_df(dataservice_entity_dfs_dict):
         studies = studies[list(columns.keys())]
         studies = studies.rename(columns=columns)
         studies = studies[studies[CONCEPT.STUDY.VISIBLE] == True]
+        studies = studies[studies[CONCEPT.STUDY.TARGET_SERVICE_ID] == study_id]
 
     return studies
 

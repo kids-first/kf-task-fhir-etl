@@ -175,7 +175,7 @@ class Ingest:
             study_merged_df, study_all_targets = None, set()
 
             # studies
-            studies = study.build_df(dataservice_entity_dfs_dict)
+            studies = study.build_df(dataservice_entity_dfs_dict, kf_study_id)
             if utils.df_exists(studies):
                 targets = [ResearchStudy]
                 study_all_targets.update(targets)
