@@ -29,6 +29,7 @@ def build_df(dataservice_entity_dfs_dict, studies):
             study_merged_df = outer_merge(
                 studies,
                 investigators,
+                how="inner",
                 with_merge_detail_dfs=False,
                 on=CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
             )

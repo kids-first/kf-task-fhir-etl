@@ -180,18 +180,18 @@ class Ingest:
                 study_all_targets.add(ResearchStudy)
 
             # investigators
-            study_merged_df = investigator.build_df(
+            investigators = investigator.build_df(
                 dataservice_entity_dfs_dict, studies
             )
-            investigators = dataservice_entity_dfs_dict.get("investigators")
             if utils.df_exists(investigators):
-                study_all_targets.update(
-                    [
+                targets = [
                         Practitioner,
                         Organization,
                         PractitionerRole,
                     ]
-                )
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = investigators
+                study_all_targets.update(targets)
 
             # participants
             study_merged_df = participant.build_df(
