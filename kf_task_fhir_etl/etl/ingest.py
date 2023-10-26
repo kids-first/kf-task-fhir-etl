@@ -247,12 +247,14 @@ class Ingest:
                     entity_dfs_per_study[kf_study_id][t.class_name] = phenotypes
 
             # outcomes
-            study_merged_df = outcome.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
+            outcomes = outcome.build_df(
+                dataservice_entity_dfs_dict, participants
             )
-            outcomes = dataservice_entity_dfs_dict.get("outcomes")
             if utils.df_exists(outcomes):
-                study_all_targets.add(VitalStatus)
+                targets = [VitalStatus]
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = outcomes
 
             # biospecimen-diagnoses
             study_merged_df, biospecimen_diagnoses = biospecimen_diagnosis.build_df(
@@ -294,14 +296,14 @@ class Ingest:
                 dataservice_entity_dfs_dict, study_merged_df
             )
             genomic_files = dataservice_entity_dfs_dict.get("genomic-files")
-            if utils.df_exists(genomic_files):
-                study_all_targets.update(
-                    [
-                        DRSDocumentReference,
-                        # Below is an intermediate solution for index files
-                        DRSDocumentReferenceIndex,
-                    ]
-                )
+            #if utils.df_exists(genomic_files):
+            #    study_all_targets.update(
+            #        [
+            #            DRSDocumentReference,
+            #            # Below is an intermediate solution for index files
+            #            DRSDocumentReferenceIndex,
+            #        ]
+            #    )
 
             # sequencing-experiment-genomic-files
             study_merged_df, seq_gfs = sequencing_experiment_genomic_file.build_df(
