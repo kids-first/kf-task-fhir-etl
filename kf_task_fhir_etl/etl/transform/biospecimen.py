@@ -6,11 +6,13 @@ from kf_lib_data_ingest.common.pandas_utils import outer_merge
 
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict, study_merged_df):
+def build_df(dataservice_entity_dfs_dict, participants):
     logger.info(
         f"🏭 Transforming biospecimens ..."
     )
+    study_merged_df = None
     biospecimens = dataservice_entity_dfs_dict.get("biospecimens")
+
     if biospecimens is not None:
         columns = {
             "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
@@ -39,5 +41,13 @@ def build_df(dataservice_entity_dfs_dict, study_merged_df):
         biospecimens = biospecimens[
             biospecimens[CONCEPT.BIOSPECIMEN.VISIBLE] == True
         ]
+        if not biospecimens.empty:
+            study_merged_df = outer_merge(
+                participants,
+                biospecimens,
+                with_merge_detail_dfs=False,
+                how="inner",
+                on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
+            )
 
-    return biospecimens
+    return study_merged_df

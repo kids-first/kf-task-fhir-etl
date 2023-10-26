@@ -229,12 +229,14 @@ class Ingest:
                     entity_dfs_per_study[kf_study_id][t.class_name] = families
 
             # diagnoses
-            study_merged_df = diagnosis.build_df(
+            diagnoses = diagnosis.build_df(
                 dataservice_entity_dfs_dict, participants
             )
-            diagnoses = dataservice_entity_dfs_dict.get("diagnoses")
             if utils.df_exists(diagnoses):
-                study_all_targets.add(Disease)
+                targets = [Disease]
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = diagnoses
 
             # phenotypes
             phenotypes = phenotype.build_df(
@@ -256,67 +258,64 @@ class Ingest:
                 for t in targets:
                     entity_dfs_per_study[kf_study_id][t.class_name] = outcomes
 
-            # biospecimen-diagnoses
-            study_merged_df, biospecimen_diagnoses = biospecimen_diagnosis.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
-            )
-
             # biospecimens
             biospecimens = biospecimen.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
+                dataservice_entity_dfs_dict, participants
             )
             if utils.df_exists(biospecimens):
-               on = [CONCEPT.PARTICIPANT.TARGET_SERVICE_ID]
-               study_all_targets.update(
-                   [
+                targets = [
                        SequencingCenter,
                        ParentalSpecimen,
                        ChildrenSpecimen,
                    ]
-               )
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = biospecimens
 
-               if utils.df_exists(biospecimen_diagnoses):
-                   on.append(CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID)
-                   study_all_targets.add(Histopathology)
+            # biospecimen-diagnoses
+            if utils.df_exists(biospecimens) and utils.df_exists(diagnoses):
+                biospecimen_diagnoses = biospecimen_diagnosis.build_df(
+                    dataservice_entity_dfs_dict, biospecimens, diagnoses
+                )
 
-               study_merged_df = outer_merge(
-                   study_merged_df,
-                   biospecimens,
-                   with_merge_detail_dfs=False,
-                   on=on,
-               )
+                if utils.df_exists(biospecimen_diagnoses):
+                    targets = [Histopathology]
+                    study_all_targets.update(targets)
+                    for t in targets:
+                        entity_dfs_per_study[kf_study_id][t.class_name] = biospecimen_diagnoses
 
-            # biospecimen-genomic-files
-            study_merged_df = biospecimen_genomic_file.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
-            )
 
-            # genomic-files
-            study_merged_df = genomic_file.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
-            )
-            genomic_files = dataservice_entity_dfs_dict.get("genomic-files")
-            #if utils.df_exists(genomic_files):
-            #    study_all_targets.update(
-            #        [
-            #            DRSDocumentReference,
-            #            # Below is an intermediate solution for index files
-            #            DRSDocumentReferenceIndex,
-            #        ]
-            #    )
+            ## biospecimen-genomic-files
+            #study_merged_df = biospecimen_genomic_file.build_df(
+            #    dataservice_entity_dfs_dict, study_merged_df
+            #)
 
-            # sequencing-experiment-genomic-files
-            study_merged_df, seq_gfs = sequencing_experiment_genomic_file.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
-            )
+            ## genomic-files
+            #study_merged_df = genomic_file.build_df(
+            #    dataservice_entity_dfs_dict, study_merged_df
+            #)
+            #genomic_files = dataservice_entity_dfs_dict.get("genomic-files")
+            ##if utils.df_exists(genomic_files):
+            ##    study_all_targets.update(
+            ##        [
+            ##            DRSDocumentReference,
+            ##            # Below is an intermediate solution for index files
+            ##            DRSDocumentReferenceIndex,
+            ##        ]
+            ##    )
 
-            # sequencing-experiments
-            study_merged_df = sequencing_experiment.build_df(
-                dataservice_entity_dfs_dict, study_merged_df, seq_gfs
-            )
+            ## sequencing-experiment-genomic-files
+            #study_merged_df, seq_gfs = sequencing_experiment_genomic_file.build_df(
+            #    dataservice_entity_dfs_dict, study_merged_df
+            #)
+
+            ## sequencing-experiments
+            #study_merged_df = sequencing_experiment.build_df(
+            #    dataservice_entity_dfs_dict, study_merged_df, seq_gfs
+            #)
 
             # Clean up merged data frame
-            entity_dfs_per_study[kf_study_id][DEFAULT_KEY] = study_merged_df
+            # entity_dfs_per_study[kf_study_id][DEFAULT_KEY] = study_merged_df
             for study_id, entity_dfs in entity_dfs_per_study.items():
                 for entity_type, df in entity_dfs.items():
                     logger.info(
