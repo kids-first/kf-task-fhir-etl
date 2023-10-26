@@ -297,63 +297,14 @@ class Ingest:
                 )
 
             # sequencing-experiment-genomic-files
-            sequencing_experiment_genomic_files = dataservice_entity_dfs_dict.get(
-                "sequencing-experiment-genomic-files"
+            study_merged_df, seq_gfs = sequencing_experiment_genomic_file.build_df(
+                dataservice_entity_dfs_dict, study_merged_df
             )
-            if sequencing_experiment_genomic_files is not None:
-                columns = {
-                    "sequencing_experiment_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
-                    "genomic_file_id": CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-                    "external_id": CONCEPT.SEQUENCING_GENOMIC_FILE.ID,
-                    "kf_id": CONCEPT.SEQUENCING_GENOMIC_FILE.TARGET_SERVICE_ID,
-                    "visible": CONCEPT.SEQUENCING_GENOMIC_FILE.VISIBLE,
-                }
-                sequencing_experiment_genomic_files = (
-                    sequencing_experiment_genomic_files[list(columns.keys())]
-                )
-                sequencing_experiment_genomic_files = (
-                    sequencing_experiment_genomic_files.rename(columns=columns)
-                )
-                sequencing_experiment_genomic_files = (
-                    sequencing_experiment_genomic_files[
-                        sequencing_experiment_genomic_files[
-                            CONCEPT.SEQUENCING_GENOMIC_FILE.VISIBLE
-                        ]
-                        == True
-                    ]
-                )
-                if not sequencing_experiment_genomic_files.empty:
-                    study_merged_df = outer_merge(
-                        study_merged_df,
-                        sequencing_experiment_genomic_files,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-                    )
 
             # sequencing-experiments
-            sequencing_experiments = dataservice_entity_dfs_dict.get("sequencing-experiments")
-            if (
-                sequencing_experiment_genomic_files is not None
-                and sequencing_experiments is not None
-            ):
-                columns = {
-                    "experiment_strategy": CONCEPT.SEQUENCING.STRATEGY,
-                    "external_id": CONCEPT.SEQUENCING.ID,
-                    "kf_id": CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
-                    "visible": CONCEPT.SEQUENCING.VISIBLE,
-                }
-                sequencing_experiments = sequencing_experiments[list(columns.keys())]
-                sequencing_experiments = sequencing_experiments.rename(columns=columns)
-                sequencing_experiments = sequencing_experiments[
-                    sequencing_experiments[CONCEPT.SEQUENCING.VISIBLE] == True
-                ]
-                if not sequencing_experiments.empty:
-                    study_merged_df = outer_merge(
-                        study_merged_df,
-                        sequencing_experiments,
-                        with_merge_detail_dfs=False,
-                        on=CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
-                    )
+            study_merged_df = sequencing_experiment.build_df(
+                dataservice_entity_dfs_dict, study_merged_df, seq_gfs
+            )
 
             # Clean up merged data frame
             merged_df_dict[kf_study_id][DEFAULT_KEY] = clean_up_df(study_merged_df)
