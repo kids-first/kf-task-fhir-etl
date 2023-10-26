@@ -6,10 +6,11 @@ from kf_lib_data_ingest.common.pandas_utils import outer_merge
 
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict, study_merged_df):
+def build_df(dataservice_entity_dfs_dict, participants):
     logger.info(
         f"🏭 Transforming phenotypes ..."
     )
+    study_merged_df = None
     phenotypes = dataservice_entity_dfs_dict.get("phenotypes")
     if phenotypes is not None:
         columns = {
@@ -28,8 +29,9 @@ def build_df(dataservice_entity_dfs_dict, study_merged_df):
         phenotypes = phenotypes[phenotypes[CONCEPT.PHENOTYPE.VISIBLE] == True]
         if not phenotypes.empty:
             study_merged_df = outer_merge(
-                study_merged_df,
+                participants,
                 phenotypes,
+                how="inner",
                 with_merge_detail_dfs=False,
                 on=CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
             )

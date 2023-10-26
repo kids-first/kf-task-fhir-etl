@@ -237,12 +237,14 @@ class Ingest:
                 study_all_targets.add(Disease)
 
             # phenotypes
-            study_merged_df = phenotype.build_df(
-                dataservice_entity_dfs_dict, study_merged_df
+            phenotypes = phenotype.build_df(
+                dataservice_entity_dfs_dict, participants
             )
-            phenotypes = dataservice_entity_dfs_dict.get("phenotypes")
             if utils.df_exists(phenotypes):
-                study_all_targets.add(Phenotype)
+                targets = [Phenotype]
+                study_all_targets.update(targets)
+                for t in targets:
+                    entity_dfs_per_study[kf_study_id][t.class_name] = phenotypes
 
             # outcomes
             study_merged_df = outcome.build_df(
