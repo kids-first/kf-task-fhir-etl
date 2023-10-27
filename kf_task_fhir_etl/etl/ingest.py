@@ -53,6 +53,10 @@ from kf_task_fhir_etl.target_api_plugins.entity_builders import (
 )
 from kf_task_fhir_etl.target_api_plugins.kf_api_fhir_service import all_targets
 
+DEFAULT_ENTITY_BUILDERS = [
+    t.class_name for t in all_targets
+]
+
 
 logger = logging.getLogger(__name__)
 
@@ -312,7 +316,7 @@ class Ingest:
                 targets = [
                     DRSDocumentReference,
                     # Below is an intermediate solution for index files
-                    DRSDocumentReferenceIndex,
+                    #DRSDocumentReferenceIndex,
                 ]
                 study_all_targets.update(targets)
                 for t in targets:
@@ -336,12 +340,16 @@ class Ingest:
 
         return entity_dfs_per_study
 
-    def load(self, entity_dfs_per_study, dry_run=False):
+    def load(
+        self, entity_dfs_per_study, dry_run=False,
+        entity_builders=DEFAULT_ENTITY_BUILDERS
+    ):
         """Loads records.
 
         :param entity_dfs_per_study: An output from the above transform stage
         :type entity_dfs_per_study: dict
         """
+        filters = set(entity_builders)
         target_api_config_path = os.path.join(
             ROOT_DIR, "kf_task_fhir_etl", "target_api_plugins", "kf_api_fhir_service.py"
         )
@@ -349,10 +357,23 @@ class Ingest:
         for kf_study_id in entity_dfs_per_study:
             logger.info(f"  ⏳ Loading {kf_study_id}")
 
+            target_builders = []
+            for target in self.all_targets[kf_study_id]:
+                t = target.class_name
+                if t in filters: 
+                    logger.info(
+                        f"👉 Adding {t} builder to load stage"
+                    )
+                    target_builders.append(t)
+                else:
+                    logger.info(
+                        f"‼️  Removing {t} builder in load stage"
+                    )
+
             LoadStage(
                 target_api_config_path,
                 os.getenv("KF_API_FHIR_SERVICE_URL"),
-                [cls.class_name for cls in self.all_targets[kf_study_id]],
+                target_builders,
                 kf_study_id,
                 cache_dir="./",
                 use_async=True,
@@ -362,7 +383,10 @@ class Ingest:
             logger.info(f"  ✅ Loaded {kf_study_id}")
 
 
-    def run(self, dry_run=False, write_output=False, stages=None):
+    def run(
+        self, dry_run=False, write_output=False, stages=None,
+        entity_builders=DEFAULT_ENTITY_BUILDERS
+    ):
         """Runs an ingest pipeline."""
         if not stages:
             stages = ["e", "t", "l"]
@@ -387,7 +411,10 @@ class Ingest:
 
         # Load
         if "l" in stages:
-            self.load(entity_dfs_per_study, dry_run=dry_run)
+            self.load(
+                entity_dfs_per_study, dry_run=dry_run,
+                entity_builders=entity_builders
+            )
 
         logger.info(
             f"✅ Finished ingesting {self.kf_study_ids}; "
