@@ -430,8 +430,6 @@ class DRSDocumentReference:
     @classmethod
     def transform_records_list(cls, records_list):
         records = pd.DataFrame(records_list)
-        print("********************* entity builder: drs_document_reference")
-        print(records.nunique())
         by = [
             CONCEPT.STUDY.TARGET_SERVICE_ID,
             CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
@@ -481,7 +479,6 @@ class DRSDocumentReference:
 
             transformed_records_list.append(transformed_record)
 
-        print(len(transformed_records_list))
         return transformed_records_list
 
     @classmethod

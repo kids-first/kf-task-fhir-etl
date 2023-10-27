@@ -307,8 +307,6 @@ class Ingest:
                     sequencing_experiments,
                     genomic_files
                 )
-                print("******************** transform genomic files")
-                print(genomic_files.nunique())
 
             if utils.df_exists(genomic_files):
                 targets = [

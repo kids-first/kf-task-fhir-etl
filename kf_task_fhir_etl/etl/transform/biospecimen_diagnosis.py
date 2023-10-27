@@ -2,7 +2,7 @@
 import logging
 
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
-from kf_lib_data_ingest.common.pandas_utils import outer_merge
+from kf_lib_data_ingest.common.pandas_utils import merge_wo_duplicates
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ def build_df(dataservice_entity_dfs_dict, biospecimens, diagnoses):
         biospecimen_diagnoses = biospecimen_diagnoses[
             biospecimen_diagnoses[CONCEPT.BIOSPECIMEN_DIAGNOSIS.VISIBLE] == True
         ]
-        diagnoses = diagnoses[
-            [
+        d_cols =[
                    CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
                    CONCEPT.STUDY.TARGET_SERVICE_ID,
                    CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID
             ]
-        ]
+
+        diagnoses = diagnoses[d_cols]
         biospecimens = biospecimens[
             [
                 CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
@@ -41,18 +41,22 @@ def build_df(dataservice_entity_dfs_dict, biospecimens, diagnoses):
             ]
         ]
         if not biospecimen_diagnoses.empty:
-            study_merged_df = outer_merge(
+            biospecimens = merge_wo_duplicates(
                 biospecimen_diagnoses,
                 biospecimens,
-                with_merge_detail_dfs=False,
                 how="inner",
                 on=CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
             )
-            study_merged_df = outer_merge(
-                study_merged_df,
+            diagnoses = merge_wo_duplicates(
+                biospecimen_diagnoses,
                 diagnoses,
-                with_merge_detail_dfs=False,
                 how="inner",
+                on=CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
+            )
+            study_merged_df = merge_wo_duplicates(
+                biospecimens,
+                diagnoses[d_cols],
+                how="left",
                 on=CONCEPT.DIAGNOSIS.TARGET_SERVICE_ID,
             )
 

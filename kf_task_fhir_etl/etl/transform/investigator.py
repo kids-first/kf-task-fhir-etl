@@ -1,7 +1,7 @@
 
 import logging
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
-from kf_lib_data_ingest.common.pandas_utils import outer_merge
+from kf_lib_data_ingest.common.pandas_utils import merge_wo_duplicates
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +26,10 @@ def build_df(dataservice_entity_dfs_dict, studies):
             investigators[CONCEPT.INVESTIGATOR.VISIBLE] == True
         ]
         if not investigators.empty:
-            study_merged_df = outer_merge(
+            study_merged_df = merge_wo_duplicates(
                 studies,
                 investigators,
                 how="inner",
-                with_merge_detail_dfs=False,
                 on=CONCEPT.INVESTIGATOR.TARGET_SERVICE_ID,
             )
     return study_merged_df

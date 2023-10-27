@@ -3,7 +3,6 @@ import logging
 
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_lib_data_ingest.common.pandas_utils import outer_merge
-from kf_lib_data_ingest.common.misc import clean_up_df
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +26,5 @@ def build_df(dataservice_entity_dfs_dict):
         family_relationships = family_relationships[
             family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
         ]
-        if not family_relationships.empty:
-            family_relationships = clean_up_df(
-                family_relationships
-            )
 
     return family_relationships
