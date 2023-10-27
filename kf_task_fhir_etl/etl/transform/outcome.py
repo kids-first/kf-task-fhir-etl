@@ -11,6 +11,7 @@ def build_df(dataservice_entity_dfs_dict, participants):
         f"🏭 Transforming outcomes ..."
     )
     outcomes = dataservice_entity_dfs_dict.get("outcomes")
+    study_merged_df = None
     if outcomes is not None:
         columns = {
             "participant_id": CONCEPT.PARTICIPANT.TARGET_SERVICE_ID,
