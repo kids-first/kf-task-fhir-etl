@@ -2,11 +2,11 @@
 import logging
 
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
-from kf_lib_data_ingest.common.pandas_utils import outer_merge
+from kf_lib_data_ingest.common.pandas_utils import merge_wo_duplicates
 
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict):
+def build_df(dataservice_entity_dfs_dict, participants):
     logger.info(
         f"🏭 Transforming family relationships ..."
     )
@@ -26,5 +26,28 @@ def build_df(dataservice_entity_dfs_dict):
         family_relationships = family_relationships[
             family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
         ]
+        
+        participant_col = CONCEPT.PARTICIPANT.TARGET_SERVICE_ID
+        participants = participants[[participant_col]]
+        person1_col = CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID
+        person2_col = CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID
+        
+        person1 = participants.rename(
+            columns={participant_col : person1_col},
+        )
+        person2 = participants.rename(
+            columns={participant_col : person2_col},
+        )
+        
+        family_relationships = merge_wo_duplicates(
+            family_relationships,
+            person1,
+            on=person1_col
+        )
+        family_relationships = merge_wo_duplicates(
+            family_relationships,
+            person2,
+            on=person2_col
+        )
 
     return family_relationships

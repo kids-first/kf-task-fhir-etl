@@ -212,7 +212,7 @@ class Ingest:
 
             # family-relationships
             family_relationships = family_relationship.build_df(
-                dataservice_entity_dfs_dict
+                dataservice_entity_dfs_dict, participants
             )
             if utils.df_exists(family_relationships):
                 entity_dfs_per_study[kf_study_id]["family_relationship"] = family_relationships 
@@ -308,15 +308,15 @@ class Ingest:
                     genomic_files
                 )
 
-            if utils.df_exists(genomic_files):
-                targets = [
-                    DRSDocumentReference,
-                    # Below is an intermediate solution for index files
-                    DRSDocumentReferenceIndex,
-                ]
-                study_all_targets.update(targets)
-                for t in targets:
-                    entity_dfs_per_study[kf_study_id][t.class_name] = genomic_files
+            #if utils.df_exists(genomic_files):
+            #    targets = [
+            #        DRSDocumentReference,
+            #        # Below is an intermediate solution for index files
+            #        DRSDocumentReferenceIndex,
+            #    ]
+            #    study_all_targets.update(targets)
+            #    for t in targets:
+            #        entity_dfs_per_study[kf_study_id][t.class_name] = genomic_files
 
 
             # Clean up merged data frames
