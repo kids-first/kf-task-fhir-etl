@@ -23,7 +23,7 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "kidsfirst=kf_task_fhir_etl.app.cli:cli",
+            "fhiretl=kf_task_fhir_etl.app.cli:cli",
         ],
     },
     python_requires=">=3.6, <4",
