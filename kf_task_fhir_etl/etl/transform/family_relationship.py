@@ -4,9 +4,11 @@ import logging
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_lib_data_ingest.common.pandas_utils import merge_wo_duplicates
 
+from kf_task_fhir_etl import utils
+
 logger = logging.getLogger(__name__)
 
-def build_df(dataservice_entity_dfs_dict, participants):
+def build_df(dataservice_entity_dfs_dict, participants, families):
     logger.info(
         f"🏭 Transforming family relationships ..."
     )
@@ -27,8 +29,9 @@ def build_df(dataservice_entity_dfs_dict, participants):
             family_relationships[CONCEPT.FAMILY_RELATIONSHIP.VISIBLE] == True
         ]
         
+        family_col = CONCEPT.FAMILY.TARGET_SERVICE_ID
         participant_col = CONCEPT.PARTICIPANT.TARGET_SERVICE_ID
-        participants = participants[[participant_col]]
+        participants = participants[[participant_col, family_col]]
         person1_col = CONCEPT.FAMILY_RELATIONSHIP.PERSON1.TARGET_SERVICE_ID
         person2_col = CONCEPT.FAMILY_RELATIONSHIP.PERSON2.TARGET_SERVICE_ID
         
@@ -38,6 +41,21 @@ def build_df(dataservice_entity_dfs_dict, participants):
         person2 = participants.rename(
             columns={participant_col : person2_col},
         )
+
+        # Only take participants that are visible AND
+        # are part of visible families
+        if utils.df_exists(families):
+            families = families[[CONCEPT.FAMILY.TARGET_SERVICE_ID]]
+            person1 = merge_wo_duplicates(
+                families,
+                person1,
+                on=CONCEPT.FAMILY.TARGET_SERVICE_ID
+            )
+            person2 = merge_wo_duplicates(
+                families,
+                person2,
+                on=CONCEPT.FAMILY.TARGET_SERVICE_ID
+            )
         
         family_relationships = merge_wo_duplicates(
             family_relationships,

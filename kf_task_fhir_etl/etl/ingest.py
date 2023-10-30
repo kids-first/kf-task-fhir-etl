@@ -214,14 +214,6 @@ class Ingest:
                 for t in targets:
                     entity_dfs_per_study[kf_study_id][t.class_name] = participants
 
-            # family-relationships
-            family_relationships = family_relationship.build_df(
-                dataservice_entity_dfs_dict, participants
-            )
-            if utils.df_exists(family_relationships):
-                entity_dfs_per_study[kf_study_id]["family_relationship"] = family_relationships 
-                study_all_targets.add(FamilyRelationship)
-
             # families
             families = family.build_df(
                 dataservice_entity_dfs_dict, participants
@@ -231,6 +223,15 @@ class Ingest:
                 study_all_targets.update(targets)
                 for t in targets:
                     entity_dfs_per_study[kf_study_id][t.class_name] = families
+
+            # family-relationships
+            family_relationships = family_relationship.build_df(
+                dataservice_entity_dfs_dict, participants, families
+            )
+            if utils.df_exists(family_relationships):
+                entity_dfs_per_study[kf_study_id]["family_relationship"] = family_relationships 
+                study_all_targets.add(FamilyRelationship)
+
 
             # diagnoses
             diagnoses = diagnosis.build_df(
