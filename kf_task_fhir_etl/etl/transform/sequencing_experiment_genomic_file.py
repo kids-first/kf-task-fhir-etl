@@ -30,14 +30,6 @@ def build_df(dataservice_entity_dfs_dict, sequencing_experiments, genomic_files)
         sequencing_experiment_genomic_files = (
             sequencing_experiment_genomic_files.rename(columns=columns)
         )
-        sequencing_experiment_genomic_files = (
-            sequencing_experiment_genomic_files[
-                sequencing_experiment_genomic_files[
-                    CONCEPT.SEQUENCING_GENOMIC_FILE.VISIBLE
-                ]
-                == True
-            ]
-        )
         sequencing_experiments = sequencing_experiments[
             [
                 CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
@@ -46,9 +38,9 @@ def build_df(dataservice_entity_dfs_dict, sequencing_experiments, genomic_files)
         ]
     if utils.df_exists(sequencing_experiment_genomic_files):
         sequencing_experiments = merge_wo_duplicates(
-            sequencing_experiments,
             sequencing_experiment_genomic_files,
-            how="inner",
+            sequencing_experiments,
+            how="left",
             on=CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
         )
         study_merged_df = merge_wo_duplicates(
@@ -63,4 +55,4 @@ def build_df(dataservice_entity_dfs_dict, sequencing_experiments, genomic_files)
     else:
         df = genomic_files
 
-    return df, sequencing_experiment_genomic_files
+    return df

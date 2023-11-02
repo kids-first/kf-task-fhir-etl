@@ -22,8 +22,5 @@ def build_df(dataservice_entity_dfs_dict):
         }
         sequencing_experiments = sequencing_experiments[list(columns.keys())]
         sequencing_experiments = sequencing_experiments.rename(columns=columns)
-        sequencing_experiments = sequencing_experiments[
-            sequencing_experiments[CONCEPT.SEQUENCING.VISIBLE] == True
-        ]
 
     return sequencing_experiments
