@@ -291,27 +291,36 @@ class Ingest:
 
 
             # genomic-files
+            # join with biospecimens
             genomic_files = genomic_file.build_df(
                 dataservice_entity_dfs_dict
             ) 
-            # biospecimen-genomic-files
-            if utils.df_exists(biospecimens) and utils.df_exists(genomic_files):
-                # TODO remove after debug
-                genomic_files, bs_gf = biospecimen_genomic_file.build_df(
-                    dataservice_entity_dfs_dict, biospecimens, genomic_files
-                )
+            genomic_files = biospecimen_genomic_file.build_df(
+                dataservice_entity_dfs_dict, biospecimens, genomic_files
+            )
+            count = genomic_files.drop_duplicates(
+                CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID
+            ).shape[0]
+            print("****************")
+            print(f"BS GF: genomic file count {count}")
 
             # sequencing-experiments - merge in if they exist
+            # join with genomic files
             sequencing_experiments = sequencing_experiment.build_df(
                 dataservice_entity_dfs_dict, 
             )
             if utils.df_exists(sequencing_experiments):
                 # genomic-files with sequencing experiment
-                genomic_files, seq_gf = sequencing_experiment_genomic_file.build_df(
+                genomic_files = sequencing_experiment_genomic_file.build_df(
                     dataservice_entity_dfs_dict,
                     sequencing_experiments,
                     genomic_files
                 )
+                count = genomic_files.drop_duplicates(
+                    CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID
+                ).shape[0]
+                print("****************")
+                print(f"SE GF: genomic file count {count}")
 
             if utils.df_exists(genomic_files):
                 targets = [
