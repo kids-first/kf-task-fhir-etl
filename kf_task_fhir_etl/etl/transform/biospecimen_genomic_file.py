@@ -43,24 +43,17 @@ def build_df(dataservice_entity_dfs_dict, biospecimens, genomic_files):
             ]
         ]
         if not biospecimen_genomic_files.empty:
-            biospecimens = merge_wo_duplicates(
+            biospecimen_genomic_files = merge_wo_duplicates(
                 biospecimens,
                 biospecimen_genomic_files,
                 how="inner",
                 on=CONCEPT.BIOSPECIMEN.TARGET_SERVICE_ID,
             )
-            genomic_files = merge_wo_duplicates(
+            study_merged_df = merge_wo_duplicates(
                 genomic_files,
                 biospecimen_genomic_files,
                 how="inner",
                 on=CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
             )
-            cols = [c for c in genomic_files.columns if not c.startswith("BIOSPECIMEN")]
-            study_merged_df = merge_wo_duplicates(
-                genomic_files[cols],
-                biospecimens,
-                how="left",
-                on=CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
-            )
 
-    return study_merged_df, biospecimen_genomic_files
+    return study_merged_df
