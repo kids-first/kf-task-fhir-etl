@@ -28,9 +28,5 @@ def build_df(dataservice_entity_dfs_dict, participants):
                 how="inner",
                 on=CONCEPT.FAMILY.TARGET_SERVICE_ID,
             )
-            study_merged_df.drop_duplicates(
-                CONCEPT.FAMILY.TARGET_SERVICE_ID,
-                inplace=True
-            )
 
     return study_merged_df
