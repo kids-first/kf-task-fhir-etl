@@ -36,17 +36,20 @@ def build_df(dataservice_entity_dfs_dict, sequencing_experiments, genomic_files)
                 CONCEPT.SEQUENCING.STRATEGY,
             ]
         ]
+    # Note: Inner merge will only inlclude genomic files with linked 
+    # sequencing experiments. Left merge will include genomic files 
+    # even if they don't have linked seq experiments
     if utils.df_exists(sequencing_experiment_genomic_files):
         sequencing_experiments = merge_wo_duplicates(
             sequencing_experiment_genomic_files,
             sequencing_experiments,
-            how="left",
+            how="inner",
             on=CONCEPT.SEQUENCING.TARGET_SERVICE_ID,
         )
         study_merged_df = merge_wo_duplicates(
             genomic_files,
             sequencing_experiments,
-            how="left",
+            how="inner",
             on=CONCEPT.GENOMIC_FILE.TARGET_SERVICE_ID,
         )
 
