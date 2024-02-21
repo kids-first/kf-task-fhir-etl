@@ -3,6 +3,7 @@ Builds FHIR DocumentReference resources (http://hl7.org/fhir/R4/documentreferenc
 from rows of tabular genomic file data.
 """
 import os
+from urllib.parse import urlparse
 from abc import abstractmethod
 
 import pandas as pd
@@ -10,7 +11,9 @@ import pandas as pd
 from kf_lib_data_ingest.common import constants
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
 from kf_task_fhir_etl.common.constants import MISSING_DATA_VALUES
-from kf_task_fhir_etl.target_api_plugins.common import _set_authorization
+from kf_task_fhir_etl.target_api_plugins.common import (
+    _set_authorization, update_gf_metadata, DRS_URI_KEY
+)
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Patient,
     ChildrenSpecimen,
@@ -26,7 +29,6 @@ KF_API_DATASERVICE_URL = (
     os.getenv("KF_API_DATASERVICE_URL")
     or "https://kf-api-dataservice.kidsfirstdrc.org/"
 )
-DRS_HOSTNAME = "drs://data.kidsfirstdrc.org/"
 
 # http://hl7.org/fhir/ValueSet/document-reference-status
 status_code = "current"
@@ -506,7 +508,10 @@ class DRSDocumentReference:
         genomic_file = get_dataservice_entity(
             base_url, f"/genomic-files/{genomic_file_id}"
         )["results"]
-        acl_list = _set_authorization(genomic_file) 
+        # Update file metadata for DCF based files
+        genomic_file = update_gf_metadata(genomic_file)
+
+        acl_list = _set_authorization(genomic_file)
         controlled_access = genomic_file.get("controlled_access")
         data_type = genomic_file.get("data_type")
         file_format = genomic_file.get("file_format")
@@ -515,6 +520,7 @@ class DRSDocumentReference:
         latest_did = genomic_file.get("latest_did")
         size = genomic_file.get("size")
         url_list = genomic_file.get("urls")
+        drs_uri = genomic_file.get(DRS_URI_KEY)
 
         # TEMPORARY: Impute date_type
         if (
@@ -556,7 +562,8 @@ class DRSDocumentReference:
         if data_type:
             doc_type = {"text": data_type}
             if type_coding.get(data_type):
-                doc_type.setdefault("coding", []).append(type_coding[data_type])
+                doc_type.setdefault("coding", []).append(
+                    type_coding[data_type])
             entity["type"] = doc_type
 
         # category
@@ -595,7 +602,8 @@ class DRSDocumentReference:
                         },
                     )
                 )
-                entity["subject"] = {"reference": f"{Patient.api_path}/{patient_id}"}
+                entity["subject"] = {
+                    "reference": f"{Patient.api_path}/{patient_id}"}
             except:
                 pass
 
@@ -657,7 +665,13 @@ class DRSDocumentReference:
 
         # url
         if latest_did:
-            attachment["url"] = f"{DRS_HOSTNAME.rstrip('/')}/{latest_did}"
+            attachment["url"] = drs_uri
+            # Add tag for file source
+            tag = {
+                "system": "urn:drs_hostname",
+                "code": urlparse(drs_uri).netloc,
+            }
+            entity["meta"]["tag"].append(tag)
 
         # title
         if file_name:

@@ -1,5 +1,6 @@
 import os
 import logging
+from pprint import pformat
 
 from dotenv import find_dotenv, load_dotenv
 import requests
@@ -123,11 +124,10 @@ def send_request(method, *args, **kwargs):
     if not kwargs.get("timeout"):
         # connect timeout, read timeout
         kwargs["timeout"] = (3, 60)
-    else:
-        logger.info(
-            f"⌚️ Applying user timeout: {kwargs['timeout']} (connect, read)"
-            " seconds to request"
-        )
+    logger.debug(
+        f"⌚️ Applying timeout: {kwargs['timeout']} (connect, read)"
+        " seconds to request"
+    )
 
     requests_op = getattr(requests, method.lower())
     try:
