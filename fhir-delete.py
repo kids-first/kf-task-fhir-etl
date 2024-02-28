@@ -2,6 +2,7 @@ import sys
 import argparse
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pprint import pformat
 
 from dotenv import find_dotenv, load_dotenv
 from requests import RequestException
@@ -35,7 +36,10 @@ def consume_futures(futures):
         resp, url = future.result()
         try:
             resp.raise_for_status()
-            print(f"  🔥 DELETE {url} - {resp.status_code}: {resp.json()}")
+            print(
+                f"🔥 DELETE {url} - {resp.status_code}\n:{pformat(resp.json())}"
+            )
+            print()
         except RequestException as e:
             print(e)
             # raise e
