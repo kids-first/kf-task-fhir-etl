@@ -13,6 +13,7 @@ DRS_URI_KEY = "drs_uri"
 
 logger = logging.getLogger(__name__)
 
+
 def _set_authorization(genomic_file):
     """
     Create the auth codes for the security label from genomic_file authz or acl field
@@ -67,7 +68,8 @@ def get_dcf_file(dcf_id):
     """
     base_url = DCF_BASE_URL
     endpoint = INDEXD_ENDPOINT
-    url = "/".join(part.strip("/") for part in [base_url, endpoint]) + f"/{dcf_id}"
+    url = "/".join(part.strip("/")
+                   for part in [base_url, endpoint]) + f"/{dcf_id}"
     logger.debug(f"Fetching DCF file {url}")
 
     headers = {"Content-Type": "application/json"}
@@ -93,8 +95,8 @@ def update_gf_metadata(input_gf):
     if dcf_id:
         resp = get_dcf_file(dcf_id)
         dcf_file = resp.json()
-        for key in ["size", "urls", "hashes", "file_name"]:
-            input_gf[key] = dcf_file[key]
+        for key in ["size", "urls", "hashes", "file_name", "acl", "authz"]:
+            input_gf[key] = dcf_file.get(key)
         gen3_url = "/".join(
             part.strip("/") for part in [DCF_BASE_URL, dcf_id]
         )
