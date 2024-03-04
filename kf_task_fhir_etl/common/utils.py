@@ -1,17 +1,21 @@
 import os
+import logging
+from pprint import pformat
 
 from dotenv import find_dotenv, load_dotenv
-from d3b_utils.requests_retry import Session
+import requests
 from requests import RequestException
+
+from d3b_utils.requests_retry import Session
 
 DOTENV_PATH = find_dotenv()
 if DOTENV_PATH:
     load_dotenv(DOTENV_PATH)
 
-
-FHIR_COOKIE = os.getenv("FHIR_COOKIE")
 FHIR_USERNAME = os.getenv("FHIR_USERNAME")
 FHIR_PASSWORD = os.getenv("FHIR_PASSWORD")
+
+logger = logging.getLogger(__name__)
 
 
 def not_none(val):
@@ -49,15 +53,13 @@ def yield_resources(host, endpoint, filters, show_progress=False):
     headers = {"Content-Type": "application/fhir+json;charset=utf-8"}
     auth = None
 
-    if FHIR_COOKIE:
-        headers["Cookie"] = FHIR_COOKIE
-
     if FHIR_USERNAME and FHIR_PASSWORD:
         auth = (FHIR_USERNAME, FHIR_PASSWORD)
 
     session = Session()
     while link_next is not None:
-        resp = session.get(link_next, params=filters, headers=headers, auth=auth)
+        resp = session.get(link_next, params=filters,
+                           headers=headers, auth=auth)
 
         if resp.status_code != 200:
             raise RequestException(resp.text)
@@ -86,7 +88,66 @@ def yield_resources(host, endpoint, filters, show_progress=False):
     assert expected == found, f"Found {found} resources but expected {expected}"
 
 
+def get_dataservice_entity(host, endpoint, params=None):
+    """Get a dataservice entity."""
+    resp = Session().get(
+        f"{host.rstrip('/')}/{endpoint.lstrip('/')}",
+        params=params,
+        headers={"Content-Type": "application/json"},
+    )
+
+    try:
+        resp.raise_for_status()
+    except:
+        raise RequestException(f"{resp.text}")
+
+    return resp.json()
+
+
 def yield_resource_ids(host, endpoint, filters, show_progress=False):
     """Simple wrapper around yield_resources that yields just the FHIR resource IDs"""
     for entry in yield_resources(host, endpoint, filters, show_progress):
         yield entry["resource"]["id"]
+
+
+def send_request(method, *args, **kwargs):
+    """Send http request. Raise exception on status_code >= 300
+
+    :param method: name of the requests method to call
+    :type method: str
+    :raises: requests.Exception.HTTPError
+    :returns: requests Response object
+    :rtype: requests.Response
+    """
+    # NOTE: Set timeout so requests don't hang
+    # See https://requests.readthedocs.io/en/latest/user/advanced/#timeouts
+    if not kwargs.get("timeout"):
+        # connect timeout, read timeout
+        kwargs["timeout"] = (3, 60)
+    logger.debug(
+        f"⌚️ Applying timeout: {kwargs['timeout']} (connect, read)"
+        " seconds to request"
+    )
+
+    requests_op = getattr(requests, method.lower())
+    try:
+        resp = requests_op(*args, **kwargs)
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        body = ""
+        try:
+            body = pformat(resp.json())
+        except:
+            body = resp.text
+
+        msg = (
+            "❌ Problem sending request to server\n"
+            f"{str(e)}\n"
+            f"args: {args}\n"
+            f"kwargs: {pformat(kwargs)}\n"
+            f"{body}\n"
+        )
+        logger.error(msg)
+        raise e
+
+    return resp

@@ -6,6 +6,7 @@ from abc import abstractmethod
 
 from kf_lib_data_ingest.common import constants
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
+from kf_task_fhir_etl.common.constants import MISSING_DATA_VALUES
 from kf_task_fhir_etl.target_api_plugins.entity_builders import Patient
 from kf_task_fhir_etl.common.utils import not_none, drop_none, yield_resource_ids
 
@@ -23,17 +24,6 @@ verification_status_coding = {
     },
 }
 
-missing_data_values = {
-    constants.COMMON.CANNOT_COLLECT,
-    constants.COMMON.NO_MATCH,
-    constants.COMMON.NOT_ABLE_TO_PROVIDE,
-    constants.COMMON.NOT_AVAILABLE,
-    constants.COMMON.NOT_APPLICABLE,
-    constants.COMMON.NOT_REPORTED,
-    constants.COMMON.OTHER,
-    constants.COMMON.UNKNOWN,
-}
-
 
 class Phenotype:
     class_name = "phenotype"
@@ -43,7 +33,11 @@ class Phenotype:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
-        return {"identifier": not_none(record[CONCEPT.PHENOTYPE.TARGET_SERVICE_ID])}
+        assert not_none(get_target_id_from_record(Patient, record))
+        return {
+            "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
+            "identifier": not_none(record[CONCEPT.PHENOTYPE.TARGET_SERVICE_ID]),
+        }
 
     @classmethod
     def query_target_ids(cls, host, key_components):
@@ -64,9 +58,14 @@ class Phenotype:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [
-                    "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/phenotype",
+                    "https://ncpi-fhir.github.io/ncpi-fhir-ig/StructureDefinition/phenotype",
                 ],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -95,14 +94,14 @@ class Phenotype:
 
         # code
         code = {"text": name}
-        if hpo_id and hpo_id not in missing_data_values:
+        if hpo_id and hpo_id not in MISSING_DATA_VALUES:
             code.setdefault("coding", []).append(
                 {
                     "system": "http://purl.obolibrary.org/obo/hp.owl",
                     "code": hpo_id,
                 }
             )
-        if snomed_id and snomed_id not in missing_data_values:
+        if snomed_id and snomed_id not in MISSING_DATA_VALUES:
             code.setdefault("coding", []).append(
                 {
                     "system": "http://snomed.info/sct",
@@ -118,18 +117,28 @@ class Phenotype:
                     {
                         "extension": [
                             {
-                                "url": "event",
-                                "valueCodeableConcept": {
-                                    "coding": [
-                                        {
-                                            "system": "http://snomed.info/sct",
-                                            "code": "3950001",
-                                            "display": "Birth",
-                                        }
-                                    ]
+                                "url": "target",
+                                "valueReference": {
+                                    "reference": "/".join(
+                                        [
+                                            Patient.api_path,
+                                            not_none(
+                                                get_target_id_from_record(
+                                                    Patient, record
+                                                )
+                                            ),
+                                        ]
+                                    )
                                 },
                             },
-                            {"url": "relationship", "valueCode": "after"},
+                            {
+                                "url": "targetPath",
+                                "valueString": "birthDate",
+                            },
+                            {
+                                "url": "relationship",
+                                "valueCode": "after",
+                            },
                             {
                                 "url": "offset",
                                 "valueDuration": {
@@ -140,7 +149,7 @@ class Phenotype:
                                 },
                             },
                         ],
-                        "url": "http://hl7.org/fhir/StructureDefinition/relative-date",
+                        "url": "http://hl7.org/fhir/StructureDefinition/cqf-relativeDateTime",
                     }
                 ]
             }

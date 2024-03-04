@@ -105,12 +105,14 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+.vscode/
 
 # Spyder project settings
 .spyderproject
@@ -140,3 +142,7 @@ delete.py
 
 # Miscellaneous
 .DS_Store
+
+# vim
+*.swo
+*.swp

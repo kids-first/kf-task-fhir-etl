@@ -40,9 +40,14 @@ class ProbandStatus:
         assert proband_status in ["True", "False"]
 
         return {
+            "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
             "code": "http://snomed.info/sct|85900004",
             "subject": f"{Patient.api_path}/{patient_id}",
         }
+
+    @classmethod
+    def query_target_ids(cls, host, key_components):
+        return list(yield_resource_ids(host, cls.api_path, drop_none(key_components)))
 
     @classmethod
     def build_entity(cls, record, get_target_id_from_record):
@@ -54,13 +59,18 @@ class ProbandStatus:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
                     "use": "official",
                     "system": "https://kf-api-dataservice.kidsfirstdrc.org/participants?is_proband=",
-                    "value": bool(proband_status),
+                    "value": proband_status,
                 }
             ],
             "status": status_code,

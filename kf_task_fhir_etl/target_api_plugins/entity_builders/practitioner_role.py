@@ -71,6 +71,7 @@ class PractitionerRole:
             entity["identifier"].append(
                 {
                     "use": "secondary",
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/investigators?external_id=",
                     "value": external_id,
                 }
             )

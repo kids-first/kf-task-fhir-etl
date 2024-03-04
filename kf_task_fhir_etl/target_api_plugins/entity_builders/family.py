@@ -48,7 +48,10 @@ class Family:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
-        return {"identifier": not_none(record[CONCEPT.FAMILY.TARGET_SERVICE_ID])}
+        return {
+            "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
+            "identifier": not_none(record[CONCEPT.FAMILY.TARGET_SERVICE_ID]),
+        }
 
     @classmethod
     def query_target_ids(cls, host, key_components):
@@ -66,7 +69,12 @@ class Family:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -93,6 +101,7 @@ class Family:
             entity["identifier"].append(
                 {
                     "use": "secondary",
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/families?external_id=",
                     "value": external_id,
                 }
             )
@@ -100,17 +109,24 @@ class Family:
         # member
         member = []
         for participant_id in record.get(CONCEPT.PARTICIPANT.TARGET_SERVICE_ID, []):
-            patient_id = not_none(
-                get_target_id_from_record(
-                    Patient, {CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id}
+            try:
+                patient_id = not_none(
+                    get_target_id_from_record(
+                        Patient,
+                        {
+                            CONCEPT.STUDY.TARGET_SERVICE_ID: study_id,
+                            CONCEPT.PARTICIPANT.TARGET_SERVICE_ID: participant_id,
+                        },
+                    )
                 )
-            )
-            member.append(
-                {
-                    "entity": {"reference": f"{Patient.api_path}/{patient_id}"},
-                    "inactive": False,
-                }
-            )
+                member.append(
+                    {
+                        "entity": {"reference": f"{Patient.api_path}/{patient_id}"},
+                        "inactive": False,
+                    }
+                )
+            except:
+                pass
         if member:
             entity["quantity"] = len(member)
             entity["member"] = member

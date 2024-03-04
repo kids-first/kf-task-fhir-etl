@@ -34,7 +34,11 @@ class VitalStatus:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
-        return {"identifier": not_none(record[CONCEPT.OUTCOME.TARGET_SERVICE_ID])}
+        assert not_none(get_target_id_from_record(Patient, record))
+        return {
+            "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
+            "identifier": not_none(record[CONCEPT.OUTCOME.TARGET_SERVICE_ID]),
+        }
 
     @classmethod
     def build_entity(cls, record, get_target_id_from_record):
@@ -47,10 +51,13 @@ class VitalStatus:
             "resourceType": cls.api_path,
             "id": get_target_id_from_record(cls, record),
             "meta": {
-                "profile": [
-                    "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/vital-status"
+                "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
                 ],
-                "tag": [{"code": study_id}],
             },
             "identifier": [
                 {
@@ -87,18 +94,28 @@ class VitalStatus:
                     {
                         "extension": [
                             {
-                                "url": "event",
-                                "valueCodeableConcept": {
-                                    "coding": [
-                                        {
-                                            "system": "http://snomed.info/sct",
-                                            "code": "3950001",
-                                            "display": "Birth",
-                                        }
-                                    ]
+                                "url": "target",
+                                "valueReference": {
+                                    "reference": "/".join(
+                                        [
+                                            Patient.api_path,
+                                            not_none(
+                                                get_target_id_from_record(
+                                                    Patient, record
+                                                )
+                                            ),
+                                        ]
+                                    )
                                 },
                             },
-                            {"url": "relationship", "valueCode": "after"},
+                            {
+                                "url": "targetPath",
+                                "valueString": "birthDate",
+                            },
+                            {
+                                "url": "relationship",
+                                "valueCode": "after",
+                            },
                             {
                                 "url": "offset",
                                 "valueDuration": {
@@ -109,7 +126,7 @@ class VitalStatus:
                                 },
                             },
                         ],
-                        "url": "http://hl7.org/fhir/StructureDefinition/relative-date",
+                        "url": "http://hl7.org/fhir/StructureDefinition/cqf-relativeDateTime",
                     }
                 ]
             }

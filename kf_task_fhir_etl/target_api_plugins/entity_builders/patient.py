@@ -66,6 +66,14 @@ omb_race_category = {
             "display": "not available",
         },
     },
+    constants.COMMON.NOT_REPORTED: {
+        "url": "ombCategory",
+        "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-NullFlavor",
+            "code": "NI",
+            "display": "NoInformation",
+        },
+    },
     constants.COMMON.UNKNOWN: {
         "url": "ombCategory",
         "valueCoding": {
@@ -94,6 +102,22 @@ omb_ethnicity_category = {
             "display": "Not Hispanic or Latino",
         },
     },
+    constants.COMMON.NOT_AVAILABLE: {
+        "url": "ombCategory",
+        "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-NullFlavor",
+            "code": "NAVU",
+            "display": "not available",
+        },
+    },
+    constants.COMMON.NOT_REPORTED: {
+        "url": "ombCategory",
+        "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-NullFlavor",
+            "code": "NI",
+            "display": "NoInformation",
+        },
+    },
     constants.COMMON.UNKNOWN: {
         "url": "ombCategory",
         "valueCoding": {
@@ -108,8 +132,8 @@ omb_ethnicity_category = {
 administrative_gender_code = {
     constants.GENDER.MALE: "male",
     constants.GENDER.FEMALE: "female",
-    # constants.COMMON.NOT_AVAILABLE: "unknown",
-    # constants.COMMON.NOT_REPORTED: "unknown",
+    constants.COMMON.NOT_AVAILABLE: "unknown",
+    constants.COMMON.NOT_REPORTED: "unknown",
     constants.COMMON.UNKNOWN: "unknown",
     constants.COMMON.OTHER: "other",
 }
@@ -123,7 +147,10 @@ class Patient:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
-        return {"identifier": not_none(record[CONCEPT.PARTICIPANT.TARGET_SERVICE_ID])}
+        return {
+            "_tag": not_none(record[CONCEPT.STUDY.TARGET_SERVICE_ID]),
+            "identifier": not_none(record[CONCEPT.PARTICIPANT.TARGET_SERVICE_ID]),
+        }
 
     @classmethod
     def query_target_ids(cls, host, key_components):
@@ -143,7 +170,12 @@ class Patient:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -159,6 +191,7 @@ class Patient:
             entity["identifier"].append(
                 {
                     "use": "secondary",
+                    "system": "https://kf-api-dataservice.kidsfirstdrc.org/participants?external_id=",
                     "value": external_id,
                 }
             )
@@ -191,7 +224,7 @@ class Patient:
         if us_core_ethnicity:
             entity.setdefault("extension", []).append(us_core_ethnicity)
 
-        # Gender
+        # gender
         if administrative_gender_code.get(gender):
             entity["gender"] = administrative_gender_code[gender]
 

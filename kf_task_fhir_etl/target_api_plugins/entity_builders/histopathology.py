@@ -6,23 +6,16 @@ from abc import abstractmethod
 
 from kf_lib_data_ingest.common import constants
 from kf_lib_data_ingest.common.concept_schema import CONCEPT
+from kf_task_fhir_etl.common.constants import MISSING_DATA_VALUES
 from kf_task_fhir_etl.target_api_plugins.entity_builders import (
     Patient,
     Disease,
-    Specimen,
+    ChildrenSpecimen,
 )
 from kf_task_fhir_etl.common.utils import not_none, drop_none, yield_resource_ids
 
 # http://hl7.org/fhir/ValueSet/observation-status
 status_code = "final"
-
-missing_data_values = {
-    "N/A",
-    constants.COMMON.NOT_APPLICABLE,
-    constants.COMMON.NOT_AVAILABLE,
-    constants.COMMON.NOT_REPORTED,
-    "Unavailable",
-}
 
 
 class Histopathology:
@@ -33,10 +26,16 @@ class Histopathology:
 
     @classmethod
     def get_key_components(cls, record, get_target_id_from_record):
+        assert (
+            not_none(get_target_id_from_record(Patient, record))
+            and not_none(get_target_id_from_record(Disease, record))
+            and not_none(get_target_id_from_record(ChildrenSpecimen, record))
+        )
         return {
+            "_tag": record[CONCEPT.STUDY.TARGET_SERVICE_ID],
             "identifier": not_none(
                 record[CONCEPT.BIOSPECIMEN_DIAGNOSIS.TARGET_SERVICE_ID]
-            )
+            ),
         }
 
     @classmethod
@@ -56,7 +55,12 @@ class Histopathology:
             "id": get_target_id_from_record(cls, record),
             "meta": {
                 "profile": [f"http://hl7.org/fhir/StructureDefinition/{cls.api_path}"],
-                "tag": [{"code": study_id}],
+                "tag": [
+                    {
+                        "system": "https://kf-api-dataservice.kidsfirstdrc.org/studies/",
+                        "code": study_id,
+                    }
+                ],
             },
             "identifier": [
                 {
@@ -109,14 +113,14 @@ class Histopathology:
             "specimen": {
                 "reference": "/".join(
                     [
-                        Specimen.api_path,
-                        not_none(get_target_id_from_record(Specimen, record)),
+                        ChildrenSpecimen.api_path,
+                        not_none(get_target_id_from_record(ChildrenSpecimen, record)),
                     ]
                 )
             },
         }
 
-        if tumor_descriptor and tumor_descriptor not in missing_data_values:
+        if tumor_descriptor and tumor_descriptor not in MISSING_DATA_VALUES:
             entity["valueCodeableConcept"] = {"text": tumor_descriptor}
 
         return entity
